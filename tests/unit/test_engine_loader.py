@@ -12,6 +12,8 @@ from scoutlet.engine_loader import (
     register_engine,
     engines,
     categories,
+    get_failed_engines,
+    _failed_engines,
     BUNDLED_ENGINE_DIR,
     ENGINE_DEFAULTS,
 )
@@ -23,10 +25,12 @@ def clean_registry():
     engines.clear()
     categories.clear()
     categories["general"] = []
+    _failed_engines.clear()
     yield
     engines.clear()
     categories.clear()
     categories["general"] = []
+    _failed_engines.clear()
 
 
 class TestLoadBundledEngine:
@@ -45,6 +49,33 @@ class TestLoadBundledEngine:
     def test_load_nonexistent_returns_none(self):
         eng = load_engine("nonexistent_engine_xyz")
         assert eng is None
+
+    def test_load_nonexistent_records_failure(self):
+        eng = load_engine("nonexistent_engine_xyz")
+        assert eng is None
+        failed = get_failed_engines()
+        assert "nonexistent_engine_xyz" in failed
+        assert "not found" in failed["nonexistent_engine_xyz"]
+
+    def test_load_setup_failure_records_reason(self):
+        # spotify ships without api_client_id/api_client_secret, so setup() returns False
+        eng = load_engine("spotify")
+        assert eng is None
+        failed = get_failed_engines()
+        assert "spotify" in failed
+        assert "setup()" in failed["spotify"]
+
+    def test_get_failed_engines_returns_copy(self):
+        load_engine("nonexistent_engine_xyz")
+        snapshot = get_failed_engines()
+        snapshot["mutated"] = "x"
+        assert "mutated" not in get_failed_engines()
+
+    def test_load_engines_clears_failures(self):
+        load_engine("nonexistent_engine_xyz")
+        assert get_failed_engines()
+        load_engines(engine_names=["bing"])
+        assert not get_failed_engines()
 
     def test_engine_gets_defaults(self):
         eng = load_engine("bing")

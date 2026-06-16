@@ -9,6 +9,7 @@ from scoutlet.engine_loader import (
     list_available_engines,
     load_engines,
     categories,
+    get_failed_engines,
 )
 
 
@@ -26,6 +27,13 @@ def _print_engines_by_category(engine_dir):
         print(f"{cat} ({len(names)}):")
         for name in names:
             print(f"  {name}")
+        print()
+
+    failed = get_failed_engines()
+    if failed:
+        print(f"failed to load ({len(failed)}):")
+        for name, reason in sorted(failed.items()):
+            print(f"  {name}  - {reason}")
         print()
 
 

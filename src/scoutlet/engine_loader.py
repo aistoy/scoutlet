@@ -62,7 +62,16 @@ ENGINE_DEFAULTS: dict[str, t.Any] = {
 engines: dict[str, types.ModuleType] = {}
 categories: dict[str, list[types.ModuleType]] = {"general": []}
 
+# Engines that failed to load during the last load_engines() call,
+# mapped to a short human-readable reason. Cleared on each load_engines().
+_failed_engines: dict[str, str] = {}
+
 _traits_map: EngineTraitsMap | None = None
+
+
+def get_failed_engines() -> dict[str, str]:
+    """Return a copy of {engine_name: reason} for engines that failed to load."""
+    return dict(_failed_engines)
 
 
 def _get_traits_map() -> EngineTraitsMap:
@@ -124,19 +133,25 @@ def load_engine(name: str, engine_dir: str | Path | None = None, **overrides: t.
     else:
         resolved_dir = _resolve_engine_dir(name)
         if resolved_dir is None:
-            log.error("Engine file not found: %s", name)
+            reason = "engine file not found in bundled or external directories"
+            log.error("Cannot load engine '%s': %s", name, reason)
+            _failed_engines[name] = reason
             return None
 
     filename = name + ".py"
 
     if not (resolved_dir / filename).exists():
-        log.error("Engine file not found: %s/%s", resolved_dir, filename)
+        reason = f"engine file not found: {resolved_dir / filename}"
+        log.error("Cannot load engine '%s': %s", name, reason)
+        _failed_engines[name] = reason
         return None
 
     try:
         engine = load_module(filename, str(resolved_dir))
-    except Exception:
-        log.exception("Cannot load engine '%s'", name)
+    except Exception as e:
+        reason = f"import error: {e}"
+        log.error("Cannot load engine '%s': %s", name, reason)
+        _failed_engines[name] = reason
         return None
 
     # Set name
@@ -155,18 +170,23 @@ def load_engine(name: str, engine_dir: str | Path | None = None, **overrides: t.
     try:
         traits_map = _get_traits_map()
         traits_map.set_traits(engine)
-    except Exception:
-        log.warning("Failed to load traits for engine '%s'", name, exc_info=True)
+    except Exception as e:
+        log.warning("Engine '%s': failed to load traits (%s)", name, e)
 
     # Call engine.setup() if it exists
     setup_func = getattr(engine, "setup", None)
     if setup_func and callable(setup_func):
         try:
             if not setup_func({"name": name, "engine": name}):
-                log.error("Engine '%s' setup failed", name)
+                # The engine's own logger has already printed the specific reason.
+                reason = "setup() returned False (missing config)"
+                log.error("Engine '%s' not loaded: %s", name, reason)
+                _failed_engines[name] = reason
                 return None
-        except Exception:
-            log.exception("Engine '%s' setup exception", name)
+        except Exception as e:
+            reason = f"setup() raised: {e}"
+            log.error("Engine '%s' not loaded: %s", name, reason)
+            _failed_engines[name] = reason
             return None
 
     return engine
@@ -206,6 +226,7 @@ def load_engines(
     engines.clear()
     categories.clear()
     categories["general"] = []
+    _failed_engines.clear()
 
     if engine_dir is not None:
         # Explicit dir: only load from here
