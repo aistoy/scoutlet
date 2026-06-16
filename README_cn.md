@@ -9,7 +9,7 @@
 - 复用 SearXNG 的结果聚合算法（加权评分、hash 去重、合并、分组排序）
 - 兼容 SearXNG engine 代码模式，拷贝后改 import 即可使用
 - 提供 Python API 和 CLI 两种使用方式
-- 内置 44 个引擎
+- 内置 106 个引擎（general、news、images、videos、code、music、files、science、movies、social media 等）
 - 支持 CDP 浏览器 fallback（绕过反爬），可选自动启动 headless Chrome
 - 可选 TLS 指纹后端（`primp`），模拟真实浏览器 TLS 指纹
 - 引擎健康监控 + AI 自动修复流水线（快照 → LLM 修复 → 自动 PR）
@@ -62,7 +62,7 @@ HTTP 请求 → 成功 → 返回结果
 
 直接复用 SearXNG 庞大的引擎生态（200+），从 SearXNG 拷贝 engine 文件后改 import 即可使用，其他方案不具备这种引擎复用能力。
 
-## 已适配引擎（44 个）
+## 已适配引擎（106 个）
 
 | 引擎 | 分类 | 说明 |
 |------|------|------|
@@ -109,6 +109,67 @@ HTTP 请求 → 成功 → 返回结果
 | crates | it, packages | Rust crates 搜索 |
 | 1337x | files | 1337x 种子搜索 |
 | nyaa | files | Nyaa 动漫种子搜索 |
+| arxiv | science | arXiv 预印本 |
+| crossref | science | Crossref 学术元数据 |
+| openalex | science | OpenAlex 学术作品 |
+| semantic_scholar | science | Semantic Scholar 论文 |
+| pubmed | science | PubMed 生物医学文献 |
+| pdbe | science | PDBe 蛋白质结构 |
+| astrophysics_data_system | science | NASA ADS（需 API key） |
+| scanr_structures | science | ScanR 法国研究机构 |
+| artic | images | 芝加哥艺术学院藏品 |
+| artstation | images | ArtStation 作品 |
+| deviantart | images | DeviantArt |
+| findthatmeme | images | FindThatMeme 表情包 |
+| flickr | images | Flickr（需 API key） |
+| flickr_noapi | images | Flickr（无 API key） |
+| ipernity | images | Ipernity |
+| loc | images | 美国国会图书馆照片 |
+| openclipart | images | OpenClipArt 矢量图 |
+| openverse | images | Openverse CC 媒体 |
+| pexels | images | Pexels 图片 |
+| pinterest | images | Pinterest |
+| pixabay | images | Pixabay 媒体 |
+| pixiv | images | Pixiv 插画 |
+| public_domain_image_archive | images | Public Domain Image Archive |
+| sogou_images | images | 搜狗图片 |
+| 1x | images | 1x 摄影 |
+| 360search_videos | videos | 360Search 视频 |
+| acfun | videos | Acfun 视频 |
+| bitchute | videos | Bitchute 视频 |
+| ccc_media | videos | media.ccc.de |
+| dailymotion | videos | Dailymotion 视频 |
+| digbt | videos, music, files | DigBT 种子 |
+| ina | videos | INA（法国） |
+| iqiyi | videos | 爱奇艺视频 |
+| mediathekviewweb | videos | MediathekViewWeb（德国） |
+| niconico | videos | Niconico 视频 |
+| odysee | videos | Odysee 视频 |
+| peertube | videos | Peertube 联邦视频 |
+| rumble | videos | Rumble 视频 |
+| sepiasearch | videos | SepiaSearch 联邦视频 |
+| sogou_videos | videos | 搜狗视频 |
+| tubearchivist | videos | Tube Archivist（自托管，需 base_url+token） |
+| youtube_api | videos, music | YouTube Data API v3（需 API key） |
+| youtube_noapi | videos, music | YouTube（无 API key） |
+| mixcloud | music | Mixcloud |
+| radio_browser | music, radio | Radio Browser 电台 |
+| soundcloud | music | SoundCloud |
+| spotify | music | Spotify（需 client credentials） |
+| yandex_music | music | Yandex Music |
+| imdb | movies | IMDB |
+| moviepilot | movies | Moviepilot（德国） |
+| rottentomatoes | movies | Rotten Tomatoes |
+| senscritique | movies | SensCritique（法国） |
+| 9gag | social media | 9GAG |
+| lemmy | social media | Lemmy（Communities/Users/Posts/Comments） |
+| mastodon | social media | Mastodon（accounts/hashtags） |
+| mrs | social media | Matrix Rooms Search（需 base_url） |
+| tootfinder | social media | Tootfinder（Mastodon 帖子） |
+| ansa | news | Ansa（意大利） |
+| il_post | news | Il Post（意大利） |
+| reuters | news | Reuters |
+| yahoo_news | news | Yahoo News |
 | bilibili | videos | B站视频搜索 |
 
 ## 安装
@@ -332,7 +393,7 @@ uv run python scripts/auto_heal.py --report health-report.json --snapshots-dir s
 
 ## 测试
 
-共 137 个离线测试，分三类：
+共 463 个离线测试，分三类：
 
 ```bash
 uv run pytest tests/unit/        # 核心逻辑：result types、aggregation、engine_loader、network、browser、CDP fallback、client_adapter、CLI
