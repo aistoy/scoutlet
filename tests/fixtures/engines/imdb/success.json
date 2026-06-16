@@ -1,0 +1,23 @@
+{
+  "d": [
+    {
+      "id": "tt1375666",
+      "l": "Inception",
+      "q": "2010",
+      "rank": 1,
+      "y": 2010,
+      "s": "Leonardo DiCaprio, Joseph Gordon-Levitt",
+      "i": {"imageUrl": "https://m.media-amazon.com/images/M/V1.jpg"}
+    },
+    {
+      "id": "nm0000138",
+      "l": "Leonardo DiCaprio",
+      "rank": 2,
+      "s": "Actor, Producer"
+    },
+    {
+      "id": "xx9999",
+      "l": "Skipped (unknown category prefix)"
+    }
+  ]
+}

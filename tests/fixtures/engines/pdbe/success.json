@@ -1,0 +1,37 @@
+{
+  "response": {
+    "docs": [
+      {
+        "pdb_id": "1CRN",
+        "status": "REL",
+        "title": "Structure of Crambin",
+        "citation_title": "The structure of crambin",
+        "entry_author_list": ["Teeter, M.M."],
+        "journal": "Nature",
+        "journal_volume": "287",
+        "journal_page": "129",
+        "citation_year": "1980"
+      },
+      {
+        "pdb_id": "4HHB",
+        "status": "REL",
+        "title": "Hemoglobin",
+        "citation_title": "Three-dimensional structure of hemoglobin",
+        "entry_author_list": ["Perutz, M.F."],
+        "journal": "",
+        "release_year": "1970"
+      },
+      {
+        "pdb_id": "HOLD1",
+        "status": "HOLD",
+        "title": "Should be skipped (unpublished)"
+      },
+      {
+        "pdb_id": "OBS1",
+        "status": "OBS",
+        "title": "Old Structure",
+        "superseded_by": "NEW1"
+      }
+    ]
+  }
+}

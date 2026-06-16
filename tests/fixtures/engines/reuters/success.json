@@ -1,0 +1,26 @@
+{
+  "result": {
+    "articles": [
+      {
+        "canonical_url": "/article/abc123/world/2024/01/15/some-news/",
+        "web": "Breaking News Story",
+        "description": "An important development happened today.",
+        "thumbnail": {
+          "resizer_url": "https://cdn.reuters.com/resizer/image.jpg?auth=abc",
+          "width": 1200,
+          "height": 800
+        },
+        "kicker": {"name": "World"},
+        "display_time": "2024-01-15T10:30:00Z"
+      },
+      {
+        "canonical_url": "/article/def456/business/2024/02/20/finance/",
+        "web": "Markets Update",
+        "description": "Stock market news.",
+        "thumbnail": {},
+        "kicker": {"name": "Business"},
+        "display_time": "2024-02-20T08:00:00Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "templates": [
+      {
+        "albumInfo": {
+          "title": "Drama Series",
+          "img": "https://example.com/drama.jpg",
+          "releaseTime": {"value": "2024-01-15"},
+          "brief": {"value": "A thrilling mystery drama."},
+          "videos": [
+            {
+              "title": "Episode 1",
+              "pageUrl": "http://www.iqiyi.com/v_1abc",
+              "duration": 2700000
+            },
+            {
+              "title": "Episode 2",
+              "pageUrl": "https://www.iqiyi.com/v_2def",
+              "duration": 2700000
+            }
+          ]
+        }
+      },
+      {
+        "albumInfo": {
+          "title": "Movie Single",
+          "img": "https://example.com/movie.jpg",
+          "releaseTime": {"value": "2024-02-01"},
+          "brief": {"value": "An action movie."},
+          "pageUrl": "https://www.iqiyi.com/v_movie",
+          "duration": 7200000
+        }
+      }
+    ]
+  }
+}

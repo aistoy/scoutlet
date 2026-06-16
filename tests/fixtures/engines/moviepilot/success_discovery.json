@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "title": "The Matrix",
+      "path": "/movies/the-matrix",
+      "abstract": "A computer hacker learns about the true nature of reality.",
+      "summary": "1999 sci-fi classic.",
+      "meta_short": "Sci-Fi | 1999",
+      "image": "matrix-img",
+      "image_filename": "matrix.jpg"
+    },
+    {
+      "title": "Pulp Fiction",
+      "path": "/movies/pulp-fiction",
+      "abstract": "Interconnected stories of crime in LA.",
+      "summary": "Quentin Tarantino's masterpiece.",
+      "meta_short": "Crime | 1994",
+      "image": null
+    }
+  ]
+}

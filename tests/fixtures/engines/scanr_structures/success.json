@@ -1,0 +1,16 @@
+{
+  "total": 2,
+  "results": [
+    {
+      "id": "2018GR01A",
+      "label": "National Center for Scientific Research",
+      "logo": "/logos/cnrs.png",
+      "highlights": [{"value": "The <em>CNRS</em> is among the world's leading research institutions."}]
+    },
+    {
+      "id": "2019IN02B",
+      "label": "Institute of Biology",
+      "highlights": [{"value": "Research in cellular and molecular biology."}]
+    }
+  ]
+}

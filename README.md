@@ -10,7 +10,7 @@ Based on [SearXNG](https://github.com/searxng/searxng)'s engine system and resul
 - Reuses SearXNG's result aggregation algorithm (weighted scoring, hash dedup, merge, group sorting)
 - Compatible with SearXNG engine code patterns — copy and change imports to use
 - Python API and CLI interfaces
-- 44 built-in engines (general, news, images, videos, code, music, files, and more)
+- 106 built-in engines (general, news, images, videos, code, music, files, science, movies, social media, and more)
 - CDP browser fallback (bypass anti-bot), with optional auto-launch headless Chrome
 - Optional TLS fingerprint backend (`primp`) for browser-grade TLS impersonation
 - Engine health monitoring + AI auto-heal pipeline (snapshots → LLM repair → PR)
@@ -63,7 +63,7 @@ Only `httpx`, `lxml`, `babel`. Compared to SearXNG's dozens of server-side depen
 
 Directly reuse SearXNG's massive engine ecosystem (200+). Copy engine files from SearXNG and change imports — no other solution offers this level of engine reuse.
 
-## Built-in Engines (44)
+## Built-in Engines (106)
 
 | Engine | Categories | Description |
 |--------|-----------|-------------|
@@ -110,6 +110,67 @@ Directly reuse SearXNG's massive engine ecosystem (200+). Copy engine files from
 | crates | it, packages | Rust crates |
 | 1337x | files | 1337x Torrents |
 | nyaa | files | Nyaa Anime Torrents |
+| arxiv | science | arXiv Preprints |
+| crossref | science | Crossref Scholarly Metadata |
+| openalex | science | OpenAlex Works |
+| semantic_scholar | science | Semantic Scholar Papers |
+| pubmed | science | PubMed Biomedical Literature |
+| pdbe | science | PDBe Protein Structures |
+| astrophysics_data_system | science | NASA ADS (requires API key) |
+| scanr_structures | science | ScanR French Research Structures |
+| artic | images | Art Institute of Chicago |
+| artstation | images | ArtStation Artworks |
+| deviantart | images | DeviantArt |
+| findthatmeme | images | FindThatMeme |
+| flickr | images | Flickr (requires API key) |
+| flickr_noapi | images | Flickr (no API key) |
+| ipernity | images | Ipernity |
+| loc | images | Library of Congress Photos |
+| openclipart | images | OpenClipArt |
+| openverse | images | Openverse CC Media |
+| pexels | images | Pexels Photos |
+| pinterest | images | Pinterest |
+| pixabay | images | Pixabay Media |
+| pixiv | images | Pixiv Illustrations |
+| public_domain_image_archive | images | Public Domain Image Archive |
+| sogou_images | images | Sogou Images |
+| 1x | images | 1x Photography |
+| 360search_videos | videos | 360Search Videos |
+| acfun | videos | Acfun Videos |
+| bitchute | videos | Bitchute Videos |
+| ccc_media | videos | media.ccc.de |
+| dailymotion | videos | Dailymotion Videos |
+| digbt | videos, music, files | DigBT Torrents |
+| ina | videos | INA (French) |
+| iqiyi | videos | iQiyi Videos |
+| mediathekviewweb | videos | MediathekViewWeb (German) |
+| niconico | videos | Niconico Videos |
+| odysee | videos | Odysee Videos |
+| peertube | videos | Peertube Federated Videos |
+| rumble | videos | Rumble Videos |
+| sepiasearch | videos | SepiaSearch Federated Videos |
+| sogou_videos | videos | Sogou Videos |
+| tubearchivist | videos | Tube Archivist (self-hosted, requires base_url+token) |
+| youtube_api | videos, music | YouTube Data API v3 (requires API key) |
+| youtube_noapi | videos, music | YouTube (no API key) |
+| mixcloud | music | Mixcloud |
+| radio_browser | music, radio | Radio Browser Stations |
+| soundcloud | music | SoundCloud |
+| spotify | music | Spotify (requires client credentials) |
+| yandex_music | music | Yandex Music |
+| imdb | movies | IMDB |
+| moviepilot | movies | Moviepilot (German) |
+| rottentomatoes | movies | Rotten Tomatoes |
+| senscritique | movies | SensCritique (French) |
+| 9gag | social media | 9GAG |
+| lemmy | social media | Lemmy (Communities/Users/Posts/Comments) |
+| mastodon | social media | Mastodon (accounts/hashtags) |
+| mrs | social media | Matrix Rooms Search (requires base_url) |
+| tootfinder | social media | Tootfinder (Mastodon posts) |
+| ansa | news | Ansa (Italian) |
+| il_post | news | Il Post (Italian) |
+| reuters | news | Reuters |
+| yahoo_news | news | Yahoo News |
 | bilibili | videos | Bilibili Videos |
 
 ## Installation
@@ -333,7 +394,7 @@ See [design doc](docs/auto_heal_design.md) for the full architecture.
 
 ## Tests
 
-137 offline tests across three suites:
+463 offline tests across three suites:
 
 ```bash
 uv run pytest tests/unit/        # core logic: result types, aggregation, engine_loader, network, browser, CDP fallback, client_adapter, CLI

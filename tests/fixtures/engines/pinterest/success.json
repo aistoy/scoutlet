@@ -1,0 +1,37 @@
+{
+  "resource_response": {
+    "bookmark": "abc123bookmark",
+    "data": {
+      "results": [
+        {
+          "type": "pin",
+          "id": "111",
+          "link": "https://example.com/pin1",
+          "title": "DIY Craft",
+          "rich_summary": {"display_description": "Easy craft idea.", "site_name": "craftblog.com"},
+          "images": {
+            "orig": {"url": "https://i.pinimg.com/originals/111.jpg", "width": 1000, "height": 800},
+            "236x": {"url": "https://i.pinimg.com/236x/111.jpg"}
+          },
+          "pinner": {"full_name": "Jane D", "username": "janed"}
+        },
+        {
+          "type": "story",
+          "id": "222",
+          "title": "Story - skipped"
+        },
+        {
+          "type": "pin",
+          "id": "333",
+          "link": null,
+          "grid_title": "Recipe",
+          "images": {
+            "orig": {"url": "https://i.pinimg.com/originals/333.jpg", "width": 500, "height": 500},
+            "236x": {"url": "https://i.pinimg.com/236x/333.jpg"}
+          },
+          "pinner": {"full_name": "John S", "username": "johns"}
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "v1",
+    "claimId": "abc123",
+    "title": "Decentralized Tech Talk",
+    "thumbnail_url": "https://example.com/thumb1.jpg",
+    "description": "Discussion on decentralized tech.",
+    "channel": "@techchannel",
+    "release_time": "2024-01-15T10:00:00.000Z",
+    "duration": 1800
+  },
+  {
+    "name": "v2",
+    "claimId": "def456",
+    "title": "Crypto News",
+    "thumbnail_url": "https://example.com/thumb2.jpg",
+    "description": "",
+    "channel": "@cryptonews",
+    "release_time": "2024-02-20T08:00:00.000Z",
+    "duration": 3661
+  }
+]

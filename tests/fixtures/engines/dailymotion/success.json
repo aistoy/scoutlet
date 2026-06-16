@@ -1,0 +1,26 @@
+{
+  "page": 1,
+  "limit": 10,
+  "list": [
+    {
+      "id": "x1abcde",
+      "title": "Cooking Tutorial",
+      "description": "How to make pasta from scratch.",
+      "url": "https://www.dailymotion.com/video/x1abcde",
+      "created_time": 1700000000,
+      "duration": 600,
+      "thumbnail_360_url": "http://s2.dmcdn.net/v/abc.jpg",
+      "allow_embed": true
+    },
+    {
+      "id": "x2fghij",
+      "title": "Travel Vlog",
+      "description": "Exploring Japan.",
+      "url": "https://www.dailymotion.com/video/x2fghij",
+      "created_time": 1710000000,
+      "duration": 3661,
+      "thumbnail_360_url": "https://s2.dmcdn.net/v/def.jpg",
+      "allow_embed": false
+    }
+  ]
+}

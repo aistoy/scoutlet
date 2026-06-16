@@ -59,14 +59,20 @@ def check_engine(
     resp_text = None
 
     try:
-        # Build params
+        # Build params — match _build_default_params in search.py so health
+        # check uses the same header set as actual search runs. A hardcoded
+        # UA previously triggered Bing's anti-bot and made the engine look
+        # broken even though search_sync worked fine.
+        from scoutlet.utils import gen_useragent
         params = {
             "method": "GET",
             "headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "User-Agent": gen_useragent(),
                 "Accept-Language": "en,en-US;q=0.7,en;q=0.3",
                 "Accept-Encoding": "gzip, deflate",
                 "Cache-Control": "no-cache",
+                "DNT": "1",
+                "Connection": "keep-alive",
             },
             "data": {},
             "json": {},

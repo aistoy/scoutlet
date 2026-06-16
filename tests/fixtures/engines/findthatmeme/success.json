@@ -1,0 +1,20 @@
+[
+  {
+    "type": "IMAGE",
+    "image_path": "memes/2024/01/abc123.png",
+    "thumbnail": "memes/2024/01/abc123_thumb.png",
+    "source_page_url": "https://example.com/memes/1",
+    "source_site": "Reddit",
+    "meme_file_size": 256000,
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "type": "GIF",
+    "image_path": "memes/2024/02/def456.gif",
+    "thumbnail": "memes/2024/02/def456_thumb.gif",
+    "source_page_url": "https://example.com/memes/2",
+    "source_site": "Tumblr",
+    "meme_file_size": 1500000,
+    "updated_at": "2024-02-20T08:00:00Z"
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "videos": [
+    {
+      "video_id": "abc123",
+      "video_name": "Documentary Film",
+      "description": "An eye-opening documentary.",
+      "channel": {"channel_name": "Documentary Channel"},
+      "date_published": "2024-03-15T10:30:00.000Z",
+      "duration": "45:30",
+      "view_count": 12500,
+      "thumbnail_url": "https://example.com/thumb1.jpg"
+    },
+    {
+      "video_id": "def456",
+      "video_name": "Interview",
+      "description": "Exclusive interview.",
+      "channel": {"channel_name": "News Network"},
+      "date_published": "2024-04-01T08:00:00.000Z",
+      "duration": "12:15",
+      "view_count": 5000,
+      "thumbnail_url": "https://example.com/thumb2.jpg"
+    }
+  ]
+}

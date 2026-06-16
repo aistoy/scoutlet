@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "title": "Cyberpunk Character",
+      "url": "https://www.artstation.com/artwork/abc123",
+      "smaller_square_cover_url": "https://cdn.artstation.com/p/assets/images/projects/000/123/456/smaller_square/cover.jpg",
+      "user": {"username": "artist1", "full_name": "Artist One"}
+    },
+    {
+      "title": "Fantasy Landscape",
+      "url": "https://www.artstation.com/artwork/def456",
+      "smaller_square_cover_url": "https://cdn.artstation.com/p/assets/images/projects/000/654/321/smaller_square/cover.jpg",
+      "user": {"username": "artist2", "full_name": "Artist Two"}
+    }
+  ]
+}

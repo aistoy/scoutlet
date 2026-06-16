@@ -1,0 +1,25 @@
+{
+  "data": {
+    "result": [
+      {
+        "title": "Python Tutorial",
+        "description": "Learn Python in 10 minutes",
+        "play_url": "https://www.youtube.com/watch?v=abc123",
+        "cover_img": "https://example.com/thumb1.jpg",
+        "publish_time": 1700000000
+      },
+      {
+        "title": "Advanced Python",
+        "description": "Decorators, generators, async",
+        "play_url": "https://www.youtube.com/watch?v=def456",
+        "cover_img": "https://example.com/thumb2.jpg",
+        "publish_time": 1710000000
+      },
+      {
+        "title": "Skipped (no play_url)",
+        "description": "Should be filtered out",
+        "cover_img": "https://example.com/thumb3.jpg"
+      }
+    ]
+  }
+}

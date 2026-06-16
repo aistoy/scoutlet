@@ -1,0 +1,31 @@
+{
+  "results": [
+    {
+      "id": "10ae1fb8-2b3c-4d8e-9f5a-1234567890ab",
+      "title": {"text": "Attention Is All You Need"},
+      "paperAbstract": {"text": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks."},
+      "primaryPaperLink": {"url": "https://arxiv.org/abs/1706.03762"},
+      "venue": {"text": "NeurIPS"},
+      "doiInfo": {"doi": "10.48550/arXiv.1706.03762"},
+      "pubDate": "2017-06-12",
+      "authors": [[{"name": "Ashish Vaswani"}], [{"name": "Noam Shazeer"}]],
+      "fieldsOfStudy": ["Computer Science"],
+      "alternatePaperLinks": [
+        {"linkType": "crawler", "url": "https://example.com/crawl"},
+        {"linkType": "pdf", "url": "https://arxiv.org/pdf/1706.03762"}
+      ],
+      "citationStats": {
+        "numCitations": 100000,
+        "firstCitationVelocityYear": 2017,
+        "lastCitationVelocityYear": 2024
+      }
+    },
+    {
+      "id": "abc123",
+      "title": {"text": "Paper With Minimal Fields"},
+      "paperAbstract": {"text": "Minimal abstract."},
+      "pubDate": "2020-01-01",
+      "authors": [[{"name": "Jane Doe"}]]
+    }
+  ]
+}

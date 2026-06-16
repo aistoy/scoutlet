@@ -1,0 +1,33 @@
+{
+  "photos": {
+    "page": 1,
+    "photo": [
+      {
+        "id": "11111111111",
+        "owner": "12345678@N00",
+        "ownername": "photographer1",
+        "title": "Mountain Sunrise",
+        "description": {"_content": "A beautiful sunrise over the mountains."},
+        "url_o": "https://live.staticflickr.com/1234/11111111111_abcdef_o.jpg",
+        "url_z": "https://live.staticflickr.com/1234/11111111111_abcdef_z.jpg",
+        "url_n": "https://live.staticflickr.com/1234/11111111111_abcdef_n.jpg"
+      },
+      {
+        "id": "22222222222",
+        "owner": "87654321@N00",
+        "ownername": "photographer2",
+        "title": "City Skyline",
+        "description": {"_content": "Night city skyline."},
+        "url_z": "https://live.staticflickr.com/5678/22222222222_xyz_z.jpg",
+        "url_n": "https://live.staticflickr.com/5678/22222222222_xyz_n.jpg"
+      },
+      {
+        "id": "33333333333",
+        "owner": "11111111@N00",
+        "ownername": "photographer3",
+        "title": "No URL - skipped",
+        "description": {"_content": "Should be skipped because no url_o or url_z."}
+      }
+    ]
+  }
+}

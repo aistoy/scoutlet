@@ -1,0 +1,20 @@
+{
+  "result": {
+    "results": [
+      {
+        "title": "Tatort",
+        "channel": "ARD",
+        "description": "Krimi series.",
+        "duration": 5400,
+        "url_video_hd": "http://example.com/video1.mp4"
+      },
+      {
+        "title": "Heute Show",
+        "channel": "ZDF",
+        "description": "Comedy show.",
+        "duration": 1800,
+        "url_video_hd": "https://example.com/video2.mp4"
+      }
+    ]
+  }
+}

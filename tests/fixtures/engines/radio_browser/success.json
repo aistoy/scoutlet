@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Radio Example",
+    "homepage": "https://example.com",
+    "url_resolved": "http://stream.example.com/stream.mp3",
+    "tags": "rock,indie",
+    "state": "California",
+    "country": "USA",
+    "codec": "MP3",
+    "bitrate": 128,
+    "votes": 100,
+    "clickcount": 5000,
+    "favicon": "http://example.com/favicon.png"
+  },
+  {
+    "name": "Jazz FM",
+    "homepage": "",
+    "url_resolved": "https://stream.jazz.fm/live",
+    "tags": "jazz",
+    "state": "",
+    "country": "UK",
+    "codec": "unknown",
+    "bitrate": 192,
+    "votes": 80,
+    "clickcount": 3000,
+    "favicon": "https://jazz.fm/favicon.png"
+  }
+]

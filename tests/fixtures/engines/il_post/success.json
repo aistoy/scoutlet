@@ -1,0 +1,16 @@
+{
+  "docs": [
+    {
+      "link": "https://www.ilpost.it/2024/01/15/articolo1/",
+      "title": "Le ultime notizie",
+      "summary": "Un riassunto delle notizie del giorno.",
+      "image": "https://www.ilpost.it/images/news1.jpg"
+    },
+    {
+      "link": "https://www.ilpost.it/2024/02/20/articolo2/",
+      "title": "Cronaca italiana",
+      "summary": "Notizie dall'Italia.",
+      "image": null
+    }
+  ]
+}

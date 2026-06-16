@@ -1,0 +1,17 @@
+{
+  "data": [
+    {
+      "url": "https://sepiasearch.org/videos/watch/xyz789",
+      "name": "Federated Video",
+      "description": "A video from the fediverse.",
+      "channel": {"displayName": "Fediverse Channel", "name": "fedi", "host": "sepiasearch.org"},
+      "account": {"displayName": "Fediverse"},
+      "tags": ["fediverse", "peertube"],
+      "duration": 900,
+      "views": 800,
+      "publishedAt": "2024-03-01T12:00:00Z",
+      "embedUrl": "https://sepiasearch.org/videos/embed/xyz789",
+      "thumbnailUrl": "https://sepiasearch.org/static/thumbs/xyz789.jpg"
+    }
+  ]
+}

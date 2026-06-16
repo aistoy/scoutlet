@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">12345678</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <ISSN IssnType="Electronic">1545-7855</ISSN>
+          <Title>Nature</Title>
+        </Journal>
+        <ArticleTitle>CRISPR-Cas9 genome editing</ArticleTitle>
+        <Abstract>
+          <AbstractText>CRISPR-Cas9 is a powerful tool for genome editing.</AbstractText>
+        </Abstract>
+        <AuthorList>
+          <Author>
+            <ForeName>Jennifer</ForeName>
+            <LastName>Doudna</LastName>
+          </Author>
+          <Author>
+            <ForeName>Emmanuelle</ForeName>
+            <LastName>Charpentier</LastName>
+          </Author>
+        </AuthorList>
+        <ELocationID EIdType="doi">10.1038/nature12345</ELocationID>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <History>
+        <PubMedPubDate PubStatus="accepted">
+          <Year>2014</Year>
+          <Month>6</Month>
+          <Day>1</Day>
+        </PubMedPubDate>
+      </History>
+    </PubmedData>
+  </PubmedArticle>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">87654321</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <Title>Cell</Title>
+        </Journal>
+        <ArticleTitle>Single-cell RNA sequencing</ArticleTitle>
+        <Abstract>
+          <AbstractText>Single-cell RNA-seq reveals cellular heterogeneity.</AbstractText>
+        </Abstract>
+        <AuthorList>
+          <Author>
+            <ForeName> Aviv</ForeName>
+            <LastName>Regev</LastName>
+          </Author>
+        </AuthorList>
+      </Article>
+    </MedlineCitation>
+    <PubmedData></PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

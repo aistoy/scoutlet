@@ -1,0 +1,37 @@
+{
+  "data": {
+    "searchProductExplorer": {
+      "items": [
+        {
+          "category": "FILM",
+          "dateRelease": "2010-07-14",
+          "duration": 8880,
+          "id": "12345",
+          "originalTitle": "Inception",
+          "rating": 8.5,
+          "title": "Inception",
+          "url": "/film/inception",
+          "yearOfProduction": 2010,
+          "medias": {"picture": "https://example.com/inception.jpg"},
+          "countries": [{"name": "USA"}],
+          "genresInfos": [{"label": "Sci-Fi"}, {"label": "Thriller"}],
+          "directors": [{"name": "Christopher Nolan"}],
+          "stats": {"ratingCount": 12500}
+        },
+        {
+          "category": "FILM",
+          "duration": 8400,
+          "id": "67890",
+          "title": "Amelie",
+          "url": "/film/amelie",
+          "yearOfProduction": 2001,
+          "medias": {"picture": "https://example.com/amelie.jpg"},
+          "countries": [{"name": "France"}],
+          "genresInfos": [{"label": "Comedy"}],
+          "directors": [{"name": "Jean-Pierre Jeunet"}],
+          "stats": {"ratingCount": 9800}
+        }
+      ]
+    }
+  }
+}

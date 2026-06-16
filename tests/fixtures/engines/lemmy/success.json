@@ -1,0 +1,34 @@
+{
+  "communities": [
+    {
+      "community": {
+        "actor_id": "https://lemmy.ml/c/technology",
+        "title": "Technology",
+        "description": "**News** and *discussion* about technology.",
+        "icon": "https://example.com/tech-icon.png",
+        "banner": "https://example.com/tech-banner.png"
+      },
+      "counts": {
+        "subscribers": 12500,
+        "posts": 4500,
+        "users_active_half_year": 800,
+        "published": "2020-01-15T10:00:00"
+      }
+    },
+    {
+      "community": {
+        "actor_id": "https://beehaw.org/c/science",
+        "title": "Science",
+        "description": "[Science](https://example.com) discussion.",
+        "icon": null,
+        "banner": "https://example.com/science-banner.png"
+      },
+      "counts": {
+        "subscribers": 8500,
+        "posts": 3200,
+        "users_active_half_year": 500,
+        "published": "2021-06-01T08:00:00"
+      }
+    }
+  ]
+}

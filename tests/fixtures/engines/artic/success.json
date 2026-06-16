@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "id": 111628,
+      "title": "American Gothic",
+      "date_display": "1930",
+      "artist_display": "Grant Wood",
+      "medium_display": "Oil on Beaverboard",
+      "dimensions": "78.8 × 65.3 cm",
+      "image_id": "abcd1234-ef56-7890",
+      "artist_titles": ["Grant Wood"]
+    },
+    {
+      "id": 65333,
+      "title": "A Sunday on La Grande Jatte",
+      "date_display": "1884",
+      "artist_display": "Georges Seurat",
+      "medium_display": "Oil on canvas",
+      "dimensions": "207.6 × 308 cm",
+      "image_id": "09876543-210f-edcb",
+      "artist_titles": ["Georges Seurat"]
+    },
+    {
+      "id": 99999,
+      "title": "Skipped (no image_id)",
+      "image_id": null,
+      "artist_titles": []
+    }
+  ]
+}

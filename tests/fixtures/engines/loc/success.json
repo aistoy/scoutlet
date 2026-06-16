@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "title": "[Migrant Mother]",
+      "item": {
+        "link": "https://www.loc.gov/pictures/collection/2023/item/123/",
+        "created_published_date": "1936",
+        "summary": ["A mother and her children."],
+        "notes": ["Photograph by Dorothea Lange."],
+        "part_of": ["Farm Security Administration"],
+        "creators": [{"title": "Lange, Dorothea"}]
+      },
+      "image_url": [
+        "https://cdn.loc.gov/thumb/123.jpg",
+        "https://cdn.loc.gov/full/123.jpg"
+      ]
+    },
+    {
+      "title": "No image, skipped",
+      "item": {"link": "https://www.loc.gov/pictures/item/456/"},
+      "image_url": []
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "type": "photo",
+      "attributes": {
+        "id": 12345,
+        "slug": "mountain-sunrise",
+        "title": "Mountain Sunrise",
+        "description": "A beautiful sunrise over mountains.",
+        "width": 4000,
+        "height": 2667,
+        "image": {
+          "small": "https://images.pexels.com/photos/12345/small.jpg",
+          "download_link": "https://images.pexels.com/photos/12345/original.jpg"
+        },
+        "user": {"username": "photographer1"}
+      }
+    },
+    {
+      "type": "photo",
+      "attributes": {
+        "id": 67890,
+        "slug": "ocean-waves",
+        "title": "Ocean Waves",
+        "description": "Waves crashing on the shore.",
+        "width": 3000,
+        "height": 2000,
+        "image": {
+          "small": "https://images.pexels.com/photos/67890/small.jpg",
+          "download_link": "https://images.pexels.com/photos/67890/original.jpg"
+        },
+        "user": {"username": "photographer2"}
+      }
+    }
+  ]
+}

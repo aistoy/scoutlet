@@ -1,0 +1,34 @@
+{
+  "collection": [
+    {
+      "kind": "track",
+      "permalink_url": "https://soundcloud.com/example/track1",
+      "uri": "https://api.soundcloud.com/tracks/123",
+      "title": "Sample Track",
+      "description": "A great track.",
+      "label_name": "Example Label",
+      "last_modified": "2024-01-15T10:00:00Z",
+      "likes_count": 500,
+      "playback_count": 10000,
+      "duration": 180000,
+      "artwork_url": "https://i1.sndcdn.com/artworks/abc-large.jpg",
+      "user": {"avatar_url": "https://i1.sndcdn.com/user.jpg", "full_name": "Example Artist"}
+    },
+    {
+      "kind": "playlist",
+      "permalink_url": "https://soundcloud.com/example/playlist1",
+      "uri": "https://api.soundcloud.com/playlists/456",
+      "title": "My Playlist",
+      "last_modified": "2024-02-20T08:00:00Z",
+      "duration": 3600000,
+      "playback_count": 2000,
+      "artwork_url": null,
+      "user": {"avatar_url": "https://i1.sndcdn.com/user2.jpg", "full_name": "Another Artist"}
+    },
+    {
+      "kind": "user",
+      "permalink_url": "https://soundcloud.com/example-user",
+      "title": "User - skipped"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "status": "ok",
+  "message-type": "work-list",
+  "message": {
+    "items": [
+      {
+        "DOI": "10.1000/test1",
+        "type": "journal-article",
+        "URL": "https://doi.org/10.1000/test1",
+        "title": ["Attention Is All You Need"],
+        "container-title": ["NeurIPS Proceedings"],
+        "abstract": "<jats:p>The dominant sequence transduction models are based on complex recurrent or convolutional neural networks.</jats:p>",
+        "publisher": "NeurIPS",
+        "volume": "30",
+        "page": "5998-6008",
+        "subject": ["Computer Science"],
+        "author": [
+          {"given": "Ashish", "family": "Vaswani"},
+          {"given": "Noam", "family": "Shazeer"}
+        ],
+        "published": {"date-parts": [[2017, 6, 12]]}
+      },
+      {
+        "DOI": "10.1000/test2",
+        "type": "book-chapter",
+        "URL": "https://doi.org/10.1000/test2",
+        "title": ["Chapter 1: Introduction"],
+        "container-title": ["Deep Learning Book"],
+        "publisher": "MIT Press",
+        "volume": "1",
+        "page": "1-20",
+        "author": [{"given": "Ian", "family": "Goodfellow"}],
+        "published": {"date-parts": [[2016]]}
+      },
+      {
+        "DOI": "10.1000/skip",
+        "type": "component",
+        "title": ["should be skipped"],
+        "URL": "https://doi.org/10.1000/skip"
+      }
+    ]
+  }
+}

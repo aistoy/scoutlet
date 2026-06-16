@@ -1,0 +1,28 @@
+{
+  "data": {
+    "list": [
+      {
+        "titleEsc": "Cat Video",
+        "url": "/vc/np/abc123",
+        "site": "video site",
+        "date": "2024-01-15",
+        "duration": "3:45",
+        "picurl": "https://example.com/cat.jpg"
+      },
+      {
+        "titleEsc": "Dog Video",
+        "url": "https://example.com/v/def456",
+        "site": "pet site",
+        "date": "2024-02-20",
+        "duration": "5:00",
+        "picurl": "https://example.com/dog.jpg"
+      },
+      {
+        "titleEsc": "Skipped (no url)",
+        "site": "x",
+        "date": "2024-01-01",
+        "duration": "1:00"
+      }
+    ]
+  }
+}

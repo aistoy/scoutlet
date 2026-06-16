@@ -1,0 +1,22 @@
+{
+  "body": {
+    "illust": {
+      "data": [
+        {
+          "url": "https://i.pximg.net/c/250x250_80_a2/img-master/img/2024/01/abc_square1200.jpg",
+          "title": "Original Character",
+          "alt": "Digital art illustration",
+          "userName": "artist1",
+          "userId": "111"
+        },
+        {
+          "url": "https://i.pximg.net/c/250x250_80_a2/img-master/img/2024/02/def_square1200.jpg",
+          "title": "Landscape",
+          "alt": "Mountain landscape",
+          "userName": "artist2",
+          "userId": "222"
+        }
+      ]
+    }
+  }
+}

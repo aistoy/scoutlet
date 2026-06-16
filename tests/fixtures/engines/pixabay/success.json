@@ -1,0 +1,29 @@
+{
+  "page": {
+    "results": [
+      {
+        "mediaType": "photo",
+        "href": "/photos/mountain-123/",
+        "name": "Mountain",
+        "description": "A mountain landscape.",
+        "sources": {
+          "small": "https://cdn.pixabay.com/small/123.jpg",
+          "medium": "https://cdn.pixabay.com/medium/123.jpg",
+          "large": "https://cdn.pixabay.com/large/123.jpg"
+        }
+      },
+      {
+        "mediaType": "video",
+        "href": "/videos/ocean-456/",
+        "name": "Ocean",
+        "description": "Ocean waves.",
+        "duration": 30,
+        "uploadDate": "2024-01-15T10:00:00Z",
+        "sources": {
+          "thumbnail": "https://i.pixabay.com/thumb/456.jpg",
+          "embed": "https://pixabay.com/embed/456"
+        }
+      }
+    ]
+  }
+}

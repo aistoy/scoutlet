@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>arXiv Query: search_query=all:transformer</title>
+  <entry>
+    <id>http://arxiv.org/abs/1706.03762v7</id>
+    <updated>2023-08-02T18:00:00Z</updated>
+    <published>2017-06-12T18:00:00Z</published>
+    <title>Attention Is All You Need</title>
+    <summary>The dominant sequence transduction models are based on complex recurrent or convolutional neural networks. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.</summary>
+    <author>
+      <name>Ashish Vaswani</name>
+    </author>
+    <author>
+      <name>Noam Shazeer</name>
+    </author>
+    <arxiv:doi xmlns:arxiv="http://arxiv.org/schemas/atom">10.48550/arXiv.1706.03762</arxiv:doi>
+    <link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/pdf/1706.03762v7" rel="related" title="pdf" type="application/pdf"/>
+    <arxiv:journal_ref xmlns:arxiv="http://arxiv.org/schemas/atom">NIPS 2017</arxiv:journal_ref>
+    <category xmlns="http://www.w3.org/2005/Atom" term="cs.CL"/>
+    <category xmlns="http://www.w3.org/2005/Atom" term="cs.AI"/>
+    <arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom">15 pages, 5 figures</arxiv:comment>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1810.04805v2</id>
+    <updated>2019-05-28T18:00:00Z</updated>
+    <published>2018-10-10T18:00:00Z</published>
+    <title>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</title>
+    <summary>We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers.</summary>
+    <author>
+      <name>Jacob Devlin</name>
+    </author>
+    <link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/pdf/1810.04805v2" rel="related" title="pdf" type="application/pdf"/>
+    <category xmlns="http://www.w3.org/2005/Atom" term="cs.CL"/>
+  </entry>
+</feed>

@@ -1,0 +1,27 @@
+{
+  "events": [
+    {
+      "title": "Privacy and Freedom",
+      "description": "A talk on digital privacy.",
+      "frontend_link": "https://media.ccc.de/v/example-1",
+      "thumb_url": "https://static.media.ccc.de/media/events/example/preview.jpg",
+      "date": "2023-12-27T13:00:00+01:00",
+      "length": 3300,
+      "recordings": [
+        {"mime_type": "video/webm", "recording_url": "https://example.com/video.webm"},
+        {"mime_type": "video/mp4", "recording_url": "https://example.com/video.mp4"}
+      ]
+    },
+    {
+      "title": "Open Hardware",
+      "description": "Build your own hardware.",
+      "frontend_link": "https://media.ccc.de/v/example-2",
+      "thumb_url": "https://static.media.ccc.de/media/events/example2/preview.jpg",
+      "date": null,
+      "length": 1800,
+      "recordings": [
+        {"mime_type": "video/webm", "recording_url": "https://example.com/video2.webm"}
+      ]
+    }
+  ]
+}

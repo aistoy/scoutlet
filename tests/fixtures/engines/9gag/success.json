@@ -1,0 +1,33 @@
+{
+  "data": {
+    "posts": [
+      {
+        "type": "Photo",
+        "url": "https://9gag.com/gag/abc123",
+        "title": "Funny Cat",
+        "description": "Best cat meme.",
+        "creationTs": 1700000000,
+        "images": {
+          "image700": {"url": "https://example.com/cat700.jpg", "height": 500},
+          "imageFbThumbnail": {"url": "https://example.com/catFb.jpg"}
+        }
+      },
+      {
+        "type": "Animated",
+        "url": "https://9gag.com/gag/def456",
+        "title": "Cute Dog GIF",
+        "description": "Dog doing tricks.",
+        "creationTs": 1710000000,
+        "images": {
+          "image700": {"url": "https://example.com/dog700.jpg", "height": 300},
+          "imageFbThumbnail": {"url": "https://example.com/dogFb.jpg"},
+          "image460sv": {"url": "https://example.com/dog.mp4"}
+        }
+      }
+    ],
+    "tags": [
+      {"key": "cats"},
+      {"key": "memes"}
+    ]
+  }
+}

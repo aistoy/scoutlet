@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Inception",
+    "url": "https://www.moviepilot.de/movies/inception",
+    "class": "movie",
+    "info": "2010",
+    "more": "Sci-Fi",
+    "image": "https://assets.cdn.moviepilot.de/files/abc/Inception.jpg"
+  },
+  {
+    "title": "Interstellar",
+    "url": "https://www.moviepilot.de/movies/interstellar",
+    "class": "movie",
+    "info": "2014",
+    "more": "Sci-Fi",
+    "image": "https://assets.cdn.moviepilot.de/files/def/Interstellar.jpg"
+  }
+]

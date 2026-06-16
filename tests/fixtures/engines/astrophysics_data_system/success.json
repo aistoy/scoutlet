@@ -1,0 +1,24 @@
+{
+  "response": {
+    "docs": [
+      {
+        "bibcode": "2017ApJ...847L..21A",
+        "title": ["Multi-messenger Observations of a Binary Neutron Star Merger"],
+        "author": ["Abbott, B.P.", "Abbott, R.", "Abbott, T.D."],
+        "abstract": "On 2017 August 17, the Advanced LIGO and Advanced Virgo detectors observed a binary neutron star coalescence.",
+        "doi": ["10.3847/2041-8213/aa920c"],
+        "issn": ["2041-8213"],
+        "isbn": [],
+        "keyword": ["gravitational waves", "neutron stars"],
+        "page": ["L21"],
+        "pub": "The Astrophysical Journal",
+        "pubdate": "2017-10-01",
+        "pubnote": ["ApJL"],
+        "read_count": "5000",
+        "volume": "847",
+        "year": "2017",
+        "date": "2017-10-01T00:00:00Z"
+      }
+    ]
+  }
+}

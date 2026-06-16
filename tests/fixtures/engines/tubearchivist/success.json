@@ -1,0 +1,39 @@
+{
+  "results": {
+    "channel_results": [
+      {
+        "channel_id": "chan1",
+        "channel_name": "Tech Channel",
+        "channel_description": "Daily tech videos.",
+        "channel_subs": "12500",
+        "channel_thumb_url": "/cache/channels/chan1.jpg"
+      }
+    ],
+    "video_results": [
+      {
+        "youtube_id": "vid1",
+        "title": "Build Your Own PC",
+        "description": "Step-by-step PC build.",
+        "channel": {"channel_name": "Tech Channel"},
+        "tags": ["hardware", "diy"],
+        "media_url": "/media/vid1.mp4",
+        "vid_thumb_url": "/cache/videos/vid1.jpg",
+        "published": "2024-01-15T10:00:00",
+        "player": {"duration_str": "15:30"},
+        "stats": {"view_count": 8500}
+      },
+      {
+        "youtube_id": "vid2",
+        "title": "Linux Setup",
+        "description": "My Linux daily driver.",
+        "channel": {"channel_name": "Tech Channel"},
+        "tags": [],
+        "media_url": "/media/vid2.mp4",
+        "vid_thumb_url": "/cache/videos/vid2.jpg",
+        "published": "2024-02-20",
+        "player": {"duration_str": "8:45"},
+        "stats": {"view_count": 3200}
+      }
+    ]
+  }
+}

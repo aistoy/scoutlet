@@ -1,0 +1,22 @@
+{
+  "tracks": {
+    "items": [
+      {
+        "type": "track",
+        "id": "track1abc",
+        "name": "Hit Song",
+        "artists": [{"name": "Famous Artist"}],
+        "album": {"name": "Greatest Hits"},
+        "external_urls": {"spotify": "https://open.spotify.com/track/track1abc"}
+      },
+      {
+        "type": "track",
+        "id": "track2def",
+        "name": "Another Song",
+        "artists": [{"name": "Indie Band"}],
+        "album": {"name": "Debut Album"},
+        "external_urls": {"spotify": "https://open.spotify.com/track/track2def"}
+      }
+    ]
+  }
+}

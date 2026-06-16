@@ -1,0 +1,25 @@
+{
+  "tracks": {
+    "items": [
+      {
+        "type": "music",
+        "id": "track123",
+        "title": "Russian Hit",
+        "albums": [{"id": "album456", "title": "Russian Album"}],
+        "artists": [{"name": "Russian Artist"}]
+      },
+      {
+        "type": "music",
+        "id": "track789",
+        "title": "Another Hit",
+        "albums": [{"id": "album012", "title": "Second Album"}],
+        "artists": [{"name": "Other Artist"}]
+      },
+      {
+        "type": "podcast",
+        "id": "podcast1",
+        "title": "Skipped (not music type)"
+      }
+    ]
+  }
+}

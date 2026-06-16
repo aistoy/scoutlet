@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "hits": [
+        {
+          "objectID": "abc123",
+          "title": "Anatomical Study",
+          "artist": "Leonardo da Vinci",
+          "displayYear": "1490",
+          "themes": "Renaissance, Anatomy",
+          "encompassingWork": "Notebooks",
+          "thumbnail": "https://the-public-domain-review.imgix.net/shop/anatomy.jpg?ixid=abc&s=def"
+        },
+        {
+          "objectID": "def456",
+          "title": "Botanical Print",
+          "artist": "Maria Sibylla Merian",
+          "displayYear": "1705",
+          "thumbnail": "https://the-public-domain-review.imgix.net/shop/botanical.jpg"
+        }
+      ]
+    }
+  ]
+}

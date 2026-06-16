@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "id": "abc123",
+      "title": "Mountain Sunset",
+      "foreign_landing_url": "https://example.com/photo/1",
+      "url": "https://cdn.example.com/images/1.jpg",
+      "license": "by",
+      "creator": "Jane Doe"
+    },
+    {
+      "id": "def456",
+      "title": "Ocean Wave",
+      "foreign_landing_url": "https://example.com/photo/2",
+      "url": "https://cdn.example.com/images/2.jpg",
+      "license": "by-sa",
+      "creator": "John Smith"
+    }
+  ]
+}

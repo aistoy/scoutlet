@@ -1,0 +1,41 @@
+{
+  "results": [
+    {
+      "id": "https://openalex.org/W2959369851",
+      "title": "Attention Is All You Need",
+      "publication_date": "2017-06-12",
+      "doi": "https://doi.org/10.48550/arXiv.1706.03762",
+      "type": "article",
+      "cited_by_count": 100000,
+      "abstract_inverted_index": {
+        "The": [0],
+        "dominant": [1],
+        "sequence": [2],
+        "transduction": [3]
+      },
+      "primary_location": {
+        "landing_page_url": "https://arxiv.org/abs/1706.03762",
+        "pdf_url": "https://arxiv.org/pdf/1706.03762"
+      },
+      "open_access": {"oa_url": "https://arxiv.org/pdf/1706.03762"},
+      "authorships": [
+        {"author": {"display_name": "Ashish Vaswani"}},
+        {"author": {"display_name": "Noam Shazeer"}}
+      ],
+      "host_venue": {
+        "display_name": "NeurIPS",
+        "publisher": "NeurIPS"
+      },
+      "biblio": {
+        "first_page": "5998",
+        "last_page": "6008",
+        "volume": "30",
+        "issue": "1"
+      },
+      "concepts": [
+        {"display_name": "Transformer"},
+        {"display_name": "Attention"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "id": {"videoId": "dQw4w9WgXcQ"},
+      "snippet": {
+        "title": "Music Video",
+        "description": "Official music video.",
+        "publishedAt": "2009-10-25T06:57:33Z",
+        "thumbnails": {
+          "high": {"url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"}
+        }
+      }
+    },
+    {
+      "id": {"channelId": "UCabc"},
+      "snippet": {
+        "title": "Channel (should be skipped)",
+        "description": "Not a video."
+      }
+    },
+    {
+      "id": {"videoId": "abc123"},
+      "snippet": {
+        "title": "Tutorial Video",
+        "description": "Learn Python.",
+        "publishedAt": "2024-01-15T10:00:00Z",
+        "thumbnails": {
+          "high": {"url": "https://i.ytimg.com/vi/abc123/hqdefault.jpg"}
+        }
+      }
+    }
+  ]
+}

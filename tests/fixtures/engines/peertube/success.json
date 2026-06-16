@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "url": "https://peer.tube/videos/watch/abc123",
+      "name": "Open Source Software Talk",
+      "description": "A talk about free software.",
+      "channel": {"displayName": "FSF Channel", "name": "fsf", "host": "peer.tube"},
+      "account": {"displayName": "FSF"},
+      "tags": ["opensource", "freesoftware"],
+      "duration": 1800,
+      "views": 1500,
+      "publishedAt": "2024-01-15T10:00:00Z",
+      "embedUrl": "https://peer.tube/videos/embed/abc123",
+      "thumbnailUrl": "https://peer.tube/static/thumbs/abc123.jpg"
+    },
+    {
+      "url": "https://peer.tube/videos/watch/def456",
+      "name": "Linux Tutorial",
+      "description": "Beginner-friendly Linux intro.",
+      "channel": {"displayName": "LinuxTube", "name": "linux", "host": "peer.tube"},
+      "account": {"displayName": "LinuxTube"},
+      "tags": ["linux", "tutorial"],
+      "duration": 600,
+      "views": 5000,
+      "publishedAt": "2024-02-20T08:00:00Z",
+      "embedUrl": "https://peer.tube/videos/embed/def456",
+      "thumbnailUrl": "https://peer.tube/static/thumbs/def456.jpg"
+    }
+  ]
+}
