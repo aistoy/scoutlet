@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "question_id": 12345,
+      "title": "How to learn Python?",
+      "tags": ["python", "learning"],
+      "score": 42,
+      "is_answered": true,
+      "owner": {"display_name": "user1"}
+    },
+    {
+      "question_id": 67890,
+      "title": "What is a decorator in Python?",
+      "tags": ["python", "decorator"],
+      "score": 10,
+      "is_answered": false,
+      "owner": {"display_name": "user2"}
+    }
+  ]
+}

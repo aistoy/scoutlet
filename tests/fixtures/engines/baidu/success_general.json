@@ -1,0 +1,17 @@
+{
+  "feed": {
+    "entry": [
+      {
+        "title": "Welcome to Python.org",
+        "url": "https://www.python.org/",
+        "abs": "The official home of the Python Programming Language.",
+        "time": 1700000000
+      },
+      {
+        "title": "Python Tutorial",
+        "url": "https://docs.python.org/3/tutorial/",
+        "abs": "Learn Python with the official tutorial."
+      }
+    ]
+  }
+}

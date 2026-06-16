@@ -1,0 +1,209 @@
+name: Engine Health Report
+
+on:
+  schedule:
+    - cron: '7 0,6,12,18 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Compile check
+        run: uv run python -m compileall -q src/scoutlet
+
+      - name: Run unit tests
+        run: uv run pytest tests/unit/ tests/engines/ --timeout=30 -q
+
+      - name: Run health check (all engines)
+        run: |
+          uv run python scripts/health_check.py --all --output health-report.json --snapshots-dir snapshots
+        continue-on-error: true
+
+      - name: Upload health report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: health-report-${{ github.run_number }}
+          path: |
+            health-report.json
+            snapshots/
+          retention-days: 30
+
+      - name: Print summary
+        if: always()
+        run: |
+          if [ -f health-report.json ]; then
+            echo "## Engine Health Summary" >> $GITHUB_STEP_SUMMARY
+            python3 -c "
+          import json
+          from collections import Counter
+          with open('health-report.json') as f:
+              report = json.load(f)
+          statuses = Counter(e['status'] for e in report)
+          print('| Status | Count |')
+          print('|--------|-------|')
+          for s, c in statuses.most_common():
+              print(f'| {s} | {c} |')
+          print()
+          healthy = [e for e in report if e['status'] == 'healthy']
+          if healthy:
+              print('### Healthy Engines')
+              for e in healthy:
+                  print(f\"- {e['engine']}: {e['result_count']} results in {e['response_time_ms']}ms\")
+          failed = [e for e in report if e['status'] in ('empty', 'parser_error')]
+          if failed:
+              print('### Parse Failures (auto-heal candidates)')
+              for e in failed:
+                  print(f\"- {e['engine']}: {e['error']}\")
+          "
+          fi
+
+  auto-heal:
+    needs: health-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: needs.health-check.result != 'skipped'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Download health report
+        uses: actions/download-artifact@v4
+        with:
+          name: health-report-${{ github.run_number }}
+
+      - name: Check for parse failures
+        id: check
+        run: |
+          if [ ! -f health-report.json ]; then
+            echo "has_failures=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          COUNT=$(python3 -c "
+          import json, sys
+          with open('health-report.json') as f:
+              report = json.load(f)
+          failures = [e for e in report if e['status'] in ('empty', 'parser_error')]
+          print(len(failures))
+          ")
+          echo "failure_count=$COUNT" >> $GITHUB_OUTPUT
+          if [ "$COUNT" -gt 0 ]; then
+            echo "has_failures=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_failures=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run AI auto-heal
+        if: steps.check.outputs.has_failures == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        run: |
+          uv run python scripts/auto_heal.py \
+            --report health-report.json \
+            --snapshots-dir snapshots \
+            --output heal-results.json
+
+      - name: Create fix branch and PR
+        if: steps.check.outputs.has_failures == 'true'
+        run: |
+          if [ ! -f heal-results.json ]; then
+            echo "No heal results produced"
+            exit 0
+          fi
+
+          FIXED=$(python3 -c "
+          import json
+          with open('heal-results.json') as f:
+              results = json.load(f)
+          fixed = [r for r in results if r['status'] == 'fixed']
+          print(len(fixed))
+          ")
+          if [ "$FIXED" -eq 0 ]; then
+            echo "No engines were successfully fixed"
+            exit 0
+          fi
+
+          # Create branch with timestamp
+          BRANCH="auto-fix/$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
+
+          # Stage engine changes
+          git add src/scoutlet/engines/
+
+          # Generate commit message from results
+          MSG=$(python3 -c "
+          import json
+          with open('heal-results.json') as f:
+              results = json.load(f)
+          fixed = [r for r in results if r['status'] == 'fixed']
+          engines = ', '.join(r['engine'] for r in fixed)
+          print(f'[auto-fix] 修复引擎解析: {engines}')
+          print()
+          for r in fixed:
+              print(f\"- {r['engine']}: {r['message']} (attempts: {r['attempts']})\")" || true)
+
+          git commit -m "$MSG"
+
+          git push origin "$BRANCH"
+
+          # Create PR
+          BODY=$(python3 -c "
+          import json
+          with open('heal-results.json') as f:
+              results = json.load(f)
+          print('## AI 自动修复报告')
+          print()
+          for r in results:
+              status = r['status']
+              engine = r['engine']
+              print(f'### {engine}: {status}')
+              print(f\"- {r.get('message', '')}\")
+              print(f\"- Attempts: {r.get('attempts', 0)}\")
+              if r.get('result_count'):
+                  print(f\"- Results parsed: {r['result_count']}\")
+              print()
+          print('---')
+          print('请人工审查修改内容后合并。')
+          ")
+
+          gh pr create \
+            --title "[auto-fix] 修复引擎解析 ($BRANCH)" \
+            --body "$BODY" \
+            --base main \
+            --head "$BRANCH" \
+            --label "auto-fix" || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload heal results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: heal-results-${{ github.run_number }}
+          path: heal-results.json
+          retention-days: 30

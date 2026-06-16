@@ -1,0 +1,26 @@
+{
+  "status": "success",
+  "data": {
+    "result": {
+      "items": {
+        "mainline": [
+          {
+            "type": "web",
+            "items": [
+              {
+                "title": "Welcome to Python.org",
+                "url": "https://www.python.org/",
+                "desc": "The official home of the Python Programming Language."
+              },
+              {
+                "title": "Python Tutorial",
+                "url": "https://docs.python.org/3/tutorial/",
+                "desc": "Learn Python with the official tutorial."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

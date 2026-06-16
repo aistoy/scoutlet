@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scoutlet"
+version = "0.1.0"
+description = "Lightweight local search aggregation tool for AI agents, compatible with SearXNG 200+ engines"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Ethan Liao" },
+]
+keywords = ["search", "searxng", "ai-agent", "search-engine", "aggregation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
+dependencies = [
+    "httpx",
+    "lxml",
+    "babel",
+]
+
+[project.optional-dependencies]
+browser = ["pychrome"]
+fingerprint = ["primp>=1.2.3"]
+dev = [
+    "pytest",
+    "pytest-timeout",
+    "respx",
+]
+
+[project.scripts]
+scoutlet = "scoutlet.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scoutlet"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: marks tests that require network access (deselect with '-m \"not live\"')",
+]
