@@ -81,6 +81,23 @@ def _get_traits_map() -> EngineTraitsMap:
     return _traits_map
 
 
+def peek_engine_categories(name: str, engine_dir: str | Path | None = None) -> list[str]:
+    """Read categories from an engine module without running setup().
+
+    Imports the module file and returns its declared categories. Used to filter
+    engines by category before paying the cost of full load (setup() may query
+    external services). Returns [] if the module can't be imported.
+    """
+    resolved_dir = _resolve_engine_dir(name, engine_dir)
+    if resolved_dir is None:
+        return []
+    try:
+        module = load_module(name + ".py", str(resolved_dir))
+    except Exception:
+        return []
+    return list(getattr(module, "categories", ["general"]))
+
+
 def load_module(filename: str, module_dir: str) -> types.ModuleType:
     """Load a Python module from file path."""
     modname = Path(filename).stem
@@ -178,10 +195,10 @@ def load_engine(name: str, engine_dir: str | Path | None = None, **overrides: t.
     if setup_func and callable(setup_func):
         try:
             if not setup_func({"name": name, "engine": name}):
-                # The engine's own logger has already printed the specific reason.
-                reason = "setup() returned False (missing config)"
-                log.error("Engine '%s' not loaded: %s", name, reason)
-                _failed_engines[name] = reason
+                # The engine's setup() has already logged the specific reason via
+                # its own logger; we only need to record the failure for later
+                # inspection (--list-engines --by-category).
+                _failed_engines[name] = "setup() returned False (missing config)"
                 return None
         except Exception as e:
             reason = f"setup() raised: {e}"

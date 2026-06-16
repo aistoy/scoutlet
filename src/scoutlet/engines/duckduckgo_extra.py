@@ -50,6 +50,19 @@ def init(engine_settings: dict[str, t.Any]):
         raise ValueError(f"Unsupported DuckDuckGo category: {engine_settings['ddg_category']}")
 
 
+def setup(engine_settings: dict[str, t.Any]):
+    # scoutlet's loader calls setup() (not init()) before registering an engine.
+    # ddg_category must be set to one of images/videos/news via engine_configs;
+    # the empty default would otherwise KeyError at request() time.
+    if ddg_category not in ["images", "videos", "news"]:
+        logger.error(
+            "duckduckgo_extra engine: ddg_category must be set to one of "
+            "images/videos/news via engine_configs (got %r)", ddg_category,
+        )
+        return False
+    return True
+
+
 def fetch_vqd(query: str, params: dict):
     """Fetch vqd value from duckduckgo.com when not in cache."""
     logger.debug("fetch_vqd: request value from from duckduckgo.com")

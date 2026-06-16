@@ -201,7 +201,7 @@ def _run_engine(
                     engine_name, cdp_err,
                 )
 
-        log.warning("Engine '%s' failed", engine_name, exc_info=True)
+        log.warning("Engine '%s' failed: %s", engine_name, e)
         return []
 
 
@@ -238,12 +238,14 @@ async def search(
     if engines:
         engine_names = engines
     elif categories:
-        # Load all engines, then filter by category
-        engine_loader.load_engines(engine_dir=engine_dir)
+        # Peek each engine's categories without running setup(), then load only
+        # matches — avoids setup() noise from unrelated engines (e.g., spotify,
+        # youtube_api) when the user asked for a specific category.
         engine_names = []
-        for cat in categories:
-            for eng in engine_loader.categories.get(cat, []):
-                engine_names.append(eng.name)
+        for name in engine_loader.list_available_engines(engine_dir):
+            cats = engine_loader.peek_engine_categories(name, engine_dir)
+            if any(c in cats for c in categories):
+                engine_names.append(name)
     else:
         # Default: use all loaded engines, or load from dir
         if not engine_loader.engines:
