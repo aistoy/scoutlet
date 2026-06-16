@@ -39,7 +39,7 @@ about = {
     "results": "JSON",
 }
 
-categories = []
+categories = ["general", "web"]
 paging = True
 max_page = 5
 qwant_categ = None

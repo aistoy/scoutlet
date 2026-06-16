@@ -226,6 +226,9 @@ scoutlet "latest news" -l zh -t day -e baidu,sogou
 
 # List available engines
 scoutlet --list-engines
+
+# Group engines by category
+scoutlet --list-engines --by-category
 ```
 
 ## Proxy and Browser Fallback

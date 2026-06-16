@@ -23,7 +23,7 @@ about = {
     "language": "zh",
 }
 
-categories = []
+categories = ["general"]
 paging = True
 results_per_page = 10
 quark_category = 'general'

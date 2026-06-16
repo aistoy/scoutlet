@@ -28,7 +28,7 @@ about = {
 }
 
 paging = True
-categories = []
+categories = ["general"]
 results_per_page = 10
 baidu_category = 'general'
 time_range_support = True

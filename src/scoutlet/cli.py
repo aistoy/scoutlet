@@ -5,7 +5,28 @@ import json
 import sys
 
 from scoutlet.search import search_sync
-from scoutlet.engine_loader import list_available_engines
+from scoutlet.engine_loader import (
+    list_available_engines,
+    load_engines,
+    categories,
+)
+
+
+def _print_engines_by_category(engine_dir):
+    """Load all engines and print them grouped by category."""
+    load_engines(engine_dir=engine_dir)
+    if not categories:
+        print("No engines found. Add engine .py files to the engines/ directory.")
+        return
+    total = len({e.name for engines in categories.values() for e in engines})
+    print(f"{total} engines in {len(categories)} categories:")
+    print()
+    for cat in sorted(categories):
+        names = sorted({e.name for e in categories[cat]})
+        print(f"{cat} ({len(names)}):")
+        for name in names:
+            print(f"  {name}")
+        print()
 
 
 def main():
@@ -75,16 +96,24 @@ def main():
         action="store_true",
         help="List available engines and exit",
     )
+    parser.add_argument(
+        "--by-category",
+        action="store_true",
+        help="With --list-engines, group engines by category",
+    )
 
     args = parser.parse_args()
 
     if args.list_engines:
-        engine_names = list_available_engines(args.engine_dir)
-        if not engine_names:
-            print("No engines found. Add engine .py files to the engines/ directory.")
-            sys.exit(1)
-        for name in engine_names:
-            print(name)
+        if args.by_category:
+            _print_engines_by_category(args.engine_dir)
+        else:
+            engine_names = list_available_engines(args.engine_dir)
+            if not engine_names:
+                print("No engines found. Add engine .py files to the engines/ directory.")
+                sys.exit(1)
+            for name in engine_names:
+                print(name)
         return
 
     if not args.query:

@@ -37,7 +37,7 @@ about = {
 }
 
 base_url = "https://search.brave.com/"
-categories = []
+categories = ["general", "web"]
 brave_category: t.Literal["search", "videos", "images", "news", "goggles"] = "search"
 Goggles: str = ""
 brave_spellcheck = False

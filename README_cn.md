@@ -225,6 +225,9 @@ scoutlet "最新新闻" -l zh -t day -e baidu,sogou
 
 # 列出可用引擎
 scoutlet --list-engines
+
+# 按分类列出引擎
+scoutlet --list-engines --by-category
 ```
 
 ## 代理和浏览器 Fallback

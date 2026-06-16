@@ -32,7 +32,9 @@ about = {
 }
 
 # engine dependent config
-categories = []
+# duckduckgo_extra collapses SearXNG's duckduckgo_images/videos/news into one
+# module (selected via ddg_category); list all three so it shows up under each.
+categories = ["images", "videos", "news"]
 ddg_category = ""
 """The category must be any of ``images``, ``videos`` and ``news``"""
 paging = True

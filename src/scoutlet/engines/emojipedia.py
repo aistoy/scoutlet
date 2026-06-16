@@ -1,8 +1,8 @@
 """Emojipedia - adapted from SearXNG.
 
-Empty categories list (matches SearXNG upstream) — the engine is registered
-globally and can be invoked by name, but does not appear in any category tab.
-Use engines=["emojipedia"] explicitly.
+SearXNG upstream leaves categories empty so the engine only fires when
+explicitly invoked. Scoutlet places it under "general" so it shows up in
+--list-engines --by-category; users wanting to skip it can pass -e explicitly.
 """
 
 import logging
@@ -23,7 +23,7 @@ about = {
     "results": "HTML",
 }
 
-categories = []
+categories = ["general"]
 
 base_url = "https://emojipedia.org"
 search_url = base_url + "/search?{query}"
