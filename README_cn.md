@@ -9,7 +9,7 @@
 - 复用 SearXNG 的结果聚合算法（加权评分、hash 去重、合并、分组排序）
 - 兼容 SearXNG engine 代码模式，拷贝后改 import 即可使用
 - 提供 Python API 和 CLI 两种使用方式
-- 内置 106 个引擎（general、news、images、videos、code、music、files、science、movies、social media 等）
+- 内置 108 个引擎（general、news、images、videos、code、music、files、science、movies、social media 等）
 - 支持 CDP 浏览器 fallback（绕过反爬），可选自动启动 headless Chrome
 - 可选 TLS 指纹后端（`primp`），模拟真实浏览器 TLS 指纹
 - 引擎健康监控 + AI 自动修复流水线（快照 → LLM 修复 → 自动 PR）
@@ -62,7 +62,7 @@ HTTP 请求 → 成功 → 返回结果
 
 直接复用 SearXNG 庞大的引擎生态（200+），从 SearXNG 拷贝 engine 文件后改 import 即可使用，其他方案不具备这种引擎复用能力。
 
-## 已适配引擎（106 个）
+## 已适配引擎（108 个）
 
 | 引擎 | 分类 | 说明 |
 |------|------|------|
@@ -134,6 +134,8 @@ HTTP 请求 → 成功 → 返回结果
 | public_domain_image_archive | images | Public Domain Image Archive |
 | sogou_images | images | 搜狗图片 |
 | 1x | images | 1x 摄影 |
+| frinkiac | images | Frinkiac 辛普森一家截图 |
+| emojipedia | （无分类 — 按名调用） | Emojipedia Emoji 参考 |
 | 360search_videos | videos | 360Search 视频 |
 | acfun | videos | Acfun 视频 |
 | bitchute | videos | Bitchute 视频 |
@@ -393,7 +395,7 @@ uv run python scripts/auto_heal.py --report health-report.json --snapshots-dir s
 
 ## 测试
 
-共 463 个离线测试，分三类：
+共 473 个离线测试，分三类：
 
 ```bash
 uv run pytest tests/unit/        # 核心逻辑：result types、aggregation、engine_loader、network、browser、CDP fallback、client_adapter、CLI

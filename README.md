@@ -10,7 +10,7 @@ Based on [SearXNG](https://github.com/searxng/searxng)'s engine system and resul
 - Reuses SearXNG's result aggregation algorithm (weighted scoring, hash dedup, merge, group sorting)
 - Compatible with SearXNG engine code patterns — copy and change imports to use
 - Python API and CLI interfaces
-- 106 built-in engines (general, news, images, videos, code, music, files, science, movies, social media, and more)
+- 108 built-in engines (general, news, images, videos, code, music, files, science, movies, social media, and more)
 - CDP browser fallback (bypass anti-bot), with optional auto-launch headless Chrome
 - Optional TLS fingerprint backend (`primp`) for browser-grade TLS impersonation
 - Engine health monitoring + AI auto-heal pipeline (snapshots → LLM repair → PR)
@@ -63,7 +63,7 @@ Only `httpx`, `lxml`, `babel`. Compared to SearXNG's dozens of server-side depen
 
 Directly reuse SearXNG's massive engine ecosystem (200+). Copy engine files from SearXNG and change imports — no other solution offers this level of engine reuse.
 
-## Built-in Engines (106)
+## Built-in Engines (108)
 
 | Engine | Categories | Description |
 |--------|-----------|-------------|
@@ -135,6 +135,8 @@ Directly reuse SearXNG's massive engine ecosystem (200+). Copy engine files from
 | public_domain_image_archive | images | Public Domain Image Archive |
 | sogou_images | images | Sogou Images |
 | 1x | images | 1x Photography |
+| frinkiac | images | Frinkiac Simpsons Screenshots |
+| emojipedia | (none — invoke by name) | Emojipedia Emoji Reference |
 | 360search_videos | videos | 360Search Videos |
 | acfun | videos | Acfun Videos |
 | bitchute | videos | Bitchute Videos |
@@ -394,7 +396,7 @@ See [design doc](docs/auto_heal_design.md) for the full architecture.
 
 ## Tests
 
-463 offline tests across three suites:
+473 offline tests across three suites:
 
 ```bash
 uv run pytest tests/unit/        # core logic: result types, aggregation, engine_loader, network, browser, CDP fallback, client_adapter, CLI
