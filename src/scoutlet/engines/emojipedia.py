@@ -23,7 +23,7 @@ about = {
     "results": "HTML",
 }
 
-categories = ["general"]
+categories = []
 
 base_url = "https://emojipedia.org"
 search_url = base_url + "/search?{query}"

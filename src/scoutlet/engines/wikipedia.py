@@ -27,7 +27,7 @@ about = {
     "results": "JSON",
 }
 
-categories = ["general"]
+categories = []
 paging = False
 
 # Wikipedia REST API base
