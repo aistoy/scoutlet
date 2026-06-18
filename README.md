@@ -65,115 +65,177 @@ Directly reuse SearXNG's massive engine ecosystem (200+). Copy engine files from
 
 ## Built-in Engines (108)
 
-| Engine | Categories | Description |
-|--------|-----------|-------------|
-| google | general | Google Web Search |
-| google_images | images | Google Images |
-| google_videos | videos | Google Videos |
-| google_news | news | Google News |
-| bing | general | Bing Web Search |
-| bing_images | images | Bing Images |
-| bing_videos | videos | Bing Videos |
-| bing_news | news | Bing News |
-| brave | general, news, images, videos | Brave Search |
-| duckduckgo | general | DuckDuckGo HTML (no-JS) |
-| duckduckgo_extra | images, videos, news | DuckDuckGo Extra |
-| yahoo | general | Yahoo Search |
-| qwant | general | Qwant Search |
-| baidu | general, images, it | Baidu Search |
-| sogou | general | Sogou Search |
-| sogou_wechat | news | Sogou WeChat Articles |
-| quark | general, images | Quark/Shenma Search |
-| mwmbl | general | Mwmbl Search |
-| marginalia | general | Marginalia Search |
-| seznam | general | Seznam Search |
-| reddit | social media | Reddit Search |
-| hackernews | it, news | Hacker News |
-| stackexchange | it, q&a | Stack Exchange (StackOverflow) |
-| wikipedia | general | Wikipedia Summary |
-| unsplash | images | Unsplash Photos |
-| imgur | images | Imgur Images |
-| wallhaven | images | Wallhaven Wallpapers |
-| deezer | music | Deezer Music |
-| genius | music, lyrics | Genius Lyrics |
-| bandcamp | music | Bandcamp Music |
-| vimeo | videos | Vimeo Videos |
-| invidious | videos | Invidious (YouTube front-end) |
-| piped | videos | Piped (YouTube front-end) |
-| github | it, repos | GitHub Repos Search |
-| github_code | code | GitHub Code Search |
-| gitlab | it, repos | GitLab Repos Search |
-| gitea | it, repos | Gitea/Forgejo Repos Search |
-| sourcehut | it, repos | SourceHut Repos Search |
-| npm | it, packages | NPM Packages |
-| docker_hub | it, packages | Docker Hub Images |
-| crates | it, packages | Rust crates |
-| 1337x | files | 1337x Torrents |
-| nyaa | files | Nyaa Anime Torrents |
-| arxiv | science | arXiv Preprints |
-| crossref | science | Crossref Scholarly Metadata |
-| openalex | science | OpenAlex Works |
-| semantic_scholar | science | Semantic Scholar Papers |
-| pubmed | science | PubMed Biomedical Literature |
-| pdbe | science | PDBe Protein Structures |
-| astrophysics_data_system | science | NASA ADS (requires API key) |
-| scanr_structures | science | ScanR French Research Structures |
-| artic | images | Art Institute of Chicago |
-| artstation | images | ArtStation Artworks |
-| deviantart | images | DeviantArt |
-| findthatmeme | images | FindThatMeme |
-| flickr | images | Flickr (requires API key) |
-| flickr_noapi | images | Flickr (no API key) |
-| ipernity | images | Ipernity |
-| loc | images | Library of Congress Photos |
-| openclipart | images | OpenClipArt |
-| openverse | images | Openverse CC Media |
-| pexels | images | Pexels Photos |
-| pinterest | images | Pinterest |
-| pixabay | images | Pixabay Media |
-| pixiv | images | Pixiv Illustrations |
-| public_domain_image_archive | images | Public Domain Image Archive |
-| sogou_images | images | Sogou Images |
-| 1x | images | 1x Photography |
-| frinkiac | images | Frinkiac Simpsons Screenshots |
-| emojipedia | (none — invoke by name) | Emojipedia Emoji Reference |
-| 360search_videos | videos | 360Search Videos |
-| acfun | videos | Acfun Videos |
-| bitchute | videos | Bitchute Videos |
-| ccc_media | videos | media.ccc.de |
-| dailymotion | videos | Dailymotion Videos |
-| digbt | videos, music, files | DigBT Torrents |
-| ina | videos | INA (French) |
-| iqiyi | videos | iQiyi Videos |
-| mediathekviewweb | videos | MediathekViewWeb (German) |
-| niconico | videos | Niconico Videos |
-| odysee | videos | Odysee Videos |
-| peertube | videos | Peertube Federated Videos |
-| rumble | videos | Rumble Videos |
-| sepiasearch | videos | SepiaSearch Federated Videos |
-| sogou_videos | videos | Sogou Videos |
-| tubearchivist | videos | Tube Archivist (self-hosted, requires base_url+token) |
-| youtube_api | videos, music | YouTube Data API v3 (requires API key) |
-| youtube_noapi | videos, music | YouTube (no API key) |
-| mixcloud | music | Mixcloud |
-| radio_browser | music, radio | Radio Browser Stations |
-| soundcloud | music | SoundCloud |
-| spotify | music | Spotify (requires client credentials) |
-| yandex_music | music | Yandex Music |
-| imdb | movies | IMDB |
-| moviepilot | movies | Moviepilot (German) |
-| rottentomatoes | movies | Rotten Tomatoes |
-| senscritique | movies | SensCritique (French) |
-| 9gag | social media | 9GAG |
-| lemmy | social media | Lemmy (Communities/Users/Posts/Comments) |
-| mastodon | social media | Mastodon (accounts/hashtags) |
-| mrs | social media | Matrix Rooms Search (requires base_url) |
-| tootfinder | social media | Tootfinder (Mastodon posts) |
-| ansa | news | Ansa (Italian) |
-| il_post | news | Il Post (Italian) |
-| reuters | news | Reuters |
-| yahoo_news | news | Yahoo News |
-| bilibili | videos | Bilibili Videos |
+Engines grouped by primary category. The "also in" column lists additional categories the engine belongs to. Engines with `categories = []` (emojipedia, wikipedia) are listed at the end — they are not picked up by default searches and must be invoked with `-e <name>`.
+
+### general (12) — default category
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| google |  | Google Web Search |
+| bing | web | Bing Web Search |
+| brave | web | Brave Search |
+| duckduckgo |  | DuckDuckGo HTML (no-JS) |
+| yahoo | web | Yahoo Search |
+| qwant | web | Qwant Search |
+| baidu |  | Baidu Search |
+| sogou |  | Sogou Search |
+| quark |  | Quark/Shenma Search |
+| seznam |  | Seznam Search |
+| marginalia |  | Marginalia Search |
+| mwmbl |  | Mwmbl Search |
+
+### images (24)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| google_images | web | Google Images |
+| bing_images | web | Bing Images |
+| duckduckgo_extra | videos, news | DuckDuckGo Extra (set `ddg_category=images`) |
+| unsplash |  | Unsplash Photos (requires API key) |
+| imgur |  | Imgur Images |
+| wallhaven |  | Wallhaven Wallpapers (requires API key) |
+| artic |  | Art Institute of Chicago |
+| artstation |  | ArtStation Artworks |
+| deviantart |  | DeviantArt |
+| findthatmeme |  | FindThatMeme |
+| flickr |  | Flickr (requires API key) |
+| flickr_noapi |  | Flickr (no API key) |
+| ipernity |  | Ipernity |
+| loc |  | Library of Congress Photos |
+| openclipart |  | OpenClipArt |
+| openverse |  | Openverse CC Media |
+| pexels |  | Pexels Photos |
+| pinterest |  | Pinterest |
+| pixabay |  | Pixabay Media |
+| pixiv |  | Pixiv Illustrations |
+| public_domain_image_archive |  | Public Domain Image Archive |
+| sogou_images |  | Sogou Images |
+| www1x |  | 1x Photography |
+| frinkiac |  | Frinkiac Simpsons Screenshots |
+
+### videos (24)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| google_videos | web | Google Videos |
+| bing_videos | web | Bing Videos |
+| youtube_noapi | music | YouTube (no API key) |
+| youtube_api | music | YouTube Data API v3 (requires API key) |
+| vimeo |  | Vimeo Videos |
+| invidious |  | Invidious (YouTube front-end) |
+| piped |  | Piped (YouTube front-end) |
+| bilibili |  | Bilibili Videos |
+| 360search_videos |  | 360Search Videos |
+| acfun |  | Acfun Videos |
+| bitchute |  | Bitchute Videos |
+| ccc_media |  | media.ccc.de |
+| dailymotion |  | Dailymotion Videos |
+| digbt | music, files | DigBT Torrents |
+| ina |  | INA (French) |
+| iqiyi |  | iQiyi Videos |
+| mediathekviewweb |  | MediathekViewWeb (German) |
+| niconico |  | Niconico Videos |
+| odysee |  | Odysee Videos |
+| peertube |  | Peertube Federated Videos |
+| rumble |  | Rumble Videos |
+| sepiasearch |  | SepiaSearch Federated Videos |
+| sogou_videos |  | Sogou Videos |
+| tubearchivist |  | Tube Archivist (self-hosted, requires base_url+token) |
+
+### music (8)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| deezer |  | Deezer Music |
+| genius | lyrics | Genius Lyrics |
+| bandcamp |  | Bandcamp Music |
+| mixcloud |  | Mixcloud |
+| radio_browser | radio | Radio Browser Stations |
+| soundcloud |  | SoundCloud |
+| spotify |  | Spotify (requires client credentials) |
+| yandex_music |  | Yandex Music |
+
+### news (7)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| google_news |  | Google News |
+| bing_news |  | Bing News |
+| yahoo_news |  | Yahoo News |
+| sogou_wechat |  | Sogou WeChat Articles |
+| ansa |  | Ansa (Italian) |
+| il_post |  | Il Post (Italian) |
+| reuters |  | Reuters |
+
+### it (10)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| github | repos | GitHub Repos Search |
+| gitlab | repos | GitLab Repos Search (requires base_url) |
+| gitea | repos | Gitea/Forgejo Repos Search |
+| sourcehut | repos | SourceHut Repos Search |
+| npm | packages | NPM Packages |
+| docker_hub | packages | Docker Hub Images |
+| crates | packages | Rust crates |
+| pypi | packages | PyPI Packages |
+| stackexchange | q&a | Stack Exchange (StackOverflow) |
+| hackernews | news | Hacker News |
+
+### science (8)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| arxiv | scientific publications | arXiv Preprints |
+| crossref | scientific publications | Crossref Scholarly Metadata |
+| openalex | scientific publications | OpenAlex Works |
+| semantic_scholar | scientific publications | Semantic Scholar Papers |
+| pubmed | scientific publications | PubMed Biomedical Literature |
+| pdbe |  | PDBe Protein Structures |
+| astrophysics_data_system | scientific publications | NASA ADS (requires API key) |
+| scanr_structures |  | ScanR French Research Structures |
+
+### social media (6)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| reddit |  | Reddit Search |
+| 9gag |  | 9GAG |
+| lemmy |  | Lemmy (Communities/Users/Posts/Comments) |
+| mastodon |  | Mastodon (accounts/hashtags) |
+| mrs |  | Matrix Rooms Search (requires base_url) |
+| tootfinder |  | Tootfinder (Mastodon posts) |
+
+### movies (4)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| imdb |  | IMDB |
+| moviepilot |  | Moviepilot (German) |
+| rottentomatoes |  | Rotten Tomatoes |
+| senscritique |  | SensCritique (French) |
+
+### files (2)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| 1337x |  | 1337x Torrents |
+| nyaa |  | Nyaa Anime Torrents |
+
+### code (1)
+
+| Engine | also in | Description |
+|--------|---------|-------------|
+| github_code | it | GitHub Code Search |
+
+### No category (2) — must invoke with `-e <name>`
+
+These engines have `categories = []`, matching SearXNG. Default searches skip them.
+
+| Engine | Description |
+|--------|-------------|
+| emojipedia | Emojipedia Emoji Reference |
+| wikipedia | Wikipedia Summary |
 
 ## Installation
 

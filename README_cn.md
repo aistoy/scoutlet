@@ -64,115 +64,177 @@ HTTP 请求 → 成功 → 返回结果
 
 ## 已适配引擎（108 个）
 
-| 引擎 | 分类 | 说明 |
-|------|------|------|
-| google | general | Google Web 搜索 |
-| google_images | images | Google 图片搜索 |
-| google_videos | videos | Google 视频搜索 |
-| google_news | news | Google 新闻搜索 |
-| bing | general | Bing Web 搜索 |
-| bing_images | images | Bing 图片搜索 |
-| bing_videos | videos | Bing 视频搜索 |
-| bing_news | news | Bing 新闻搜索 |
-| brave | general, news, images, videos | Brave 搜索 |
-| duckduckgo | general | DuckDuckGo HTML (no-JS) |
-| duckduckgo_extra | images, videos, news | DuckDuckGo Extra 搜索 |
-| yahoo | general | Yahoo 搜索 |
-| qwant | general | Qwant 搜索 |
-| baidu | general, images, it | 百度搜索 |
-| sogou | general | 搜狗搜索 |
-| sogou_wechat | news | 搜狗微信公众号文章 |
-| quark | general, images | 夸克/神马搜索 |
-| mwmbl | general | Mwmbl 搜索 |
-| marginalia | general | Marginalia 搜索 |
-| seznam | general | Seznam 搜索 |
-| reddit | social media | Reddit 搜索 |
-| hackernews | it, news | Hacker News 搜索 |
-| stackexchange | it, q&a | Stack Exchange (StackOverflow) |
-| wikipedia | general | Wikipedia 摘要 |
-| unsplash | images | Unsplash 图片 |
-| imgur | images | Imgur 图片 |
-| wallhaven | images | Wallhaven 壁纸 |
-| deezer | music | Deezer 音乐 |
-| genius | music, lyrics | Genius 歌词 |
-| bandcamp | music | Bandcamp 音乐 |
-| vimeo | videos | Vimeo 视频 |
-| invidious | videos | Invidious (YouTube 前端) |
-| piped | videos | Piped (YouTube 前端) |
-| github | it, repos | GitHub 仓库搜索 |
-| github_code | code | GitHub 代码搜索 |
-| gitlab | it, repos | GitLab 仓库搜索 |
-| gitea | it, repos | Gitea/Forgejo 仓库搜索 |
-| sourcehut | it, repos | SourceHut 仓库搜索 |
-| npm | it, packages | NPM 包搜索 |
-| docker_hub | it, packages | Docker Hub 镜像搜索 |
-| crates | it, packages | Rust crates 搜索 |
-| 1337x | files | 1337x 种子搜索 |
-| nyaa | files | Nyaa 动漫种子搜索 |
-| arxiv | science | arXiv 预印本 |
-| crossref | science | Crossref 学术元数据 |
-| openalex | science | OpenAlex 学术作品 |
-| semantic_scholar | science | Semantic Scholar 论文 |
-| pubmed | science | PubMed 生物医学文献 |
-| pdbe | science | PDBe 蛋白质结构 |
-| astrophysics_data_system | science | NASA ADS（需 API key） |
-| scanr_structures | science | ScanR 法国研究机构 |
-| artic | images | 芝加哥艺术学院藏品 |
-| artstation | images | ArtStation 作品 |
-| deviantart | images | DeviantArt |
-| findthatmeme | images | FindThatMeme 表情包 |
-| flickr | images | Flickr（需 API key） |
-| flickr_noapi | images | Flickr（无 API key） |
-| ipernity | images | Ipernity |
-| loc | images | 美国国会图书馆照片 |
-| openclipart | images | OpenClipArt 矢量图 |
-| openverse | images | Openverse CC 媒体 |
-| pexels | images | Pexels 图片 |
-| pinterest | images | Pinterest |
-| pixabay | images | Pixabay 媒体 |
-| pixiv | images | Pixiv 插画 |
-| public_domain_image_archive | images | Public Domain Image Archive |
-| sogou_images | images | 搜狗图片 |
-| 1x | images | 1x 摄影 |
-| frinkiac | images | Frinkiac 辛普森一家截图 |
-| emojipedia | （无分类 — 按名调用） | Emojipedia Emoji 参考 |
-| 360search_videos | videos | 360Search 视频 |
-| acfun | videos | Acfun 视频 |
-| bitchute | videos | Bitchute 视频 |
-| ccc_media | videos | media.ccc.de |
-| dailymotion | videos | Dailymotion 视频 |
-| digbt | videos, music, files | DigBT 种子 |
-| ina | videos | INA（法国） |
-| iqiyi | videos | 爱奇艺视频 |
-| mediathekviewweb | videos | MediathekViewWeb（德国） |
-| niconico | videos | Niconico 视频 |
-| odysee | videos | Odysee 视频 |
-| peertube | videos | Peertube 联邦视频 |
-| rumble | videos | Rumble 视频 |
-| sepiasearch | videos | SepiaSearch 联邦视频 |
-| sogou_videos | videos | 搜狗视频 |
-| tubearchivist | videos | Tube Archivist（自托管，需 base_url+token） |
-| youtube_api | videos, music | YouTube Data API v3（需 API key） |
-| youtube_noapi | videos, music | YouTube（无 API key） |
-| mixcloud | music | Mixcloud |
-| radio_browser | music, radio | Radio Browser 电台 |
-| soundcloud | music | SoundCloud |
-| spotify | music | Spotify（需 client credentials） |
-| yandex_music | music | Yandex Music |
-| imdb | movies | IMDB |
-| moviepilot | movies | Moviepilot（德国） |
-| rottentomatoes | movies | Rotten Tomatoes |
-| senscritique | movies | SensCritique（法国） |
-| 9gag | social media | 9GAG |
-| lemmy | social media | Lemmy（Communities/Users/Posts/Comments） |
-| mastodon | social media | Mastodon（accounts/hashtags） |
-| mrs | social media | Matrix Rooms Search（需 base_url） |
-| tootfinder | social media | Tootfinder（Mastodon 帖子） |
-| ansa | news | Ansa（意大利） |
-| il_post | news | Il Post（意大利） |
-| reuters | news | Reuters |
-| yahoo_news | news | Yahoo News |
-| bilibili | videos | B站视频搜索 |
+按主分类分组。"其它分类"列展示该引擎同时归属的额外分类。`categories = []` 的引擎（emojipedia、wikipedia）列在最后 —— 默认搜索不会启用,必须用 `-e <name>` 调用。
+
+### general（12）— 默认分类
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| google |  | Google Web 搜索 |
+| bing | web | Bing Web 搜索 |
+| brave | web | Brave 搜索 |
+| duckduckgo |  | DuckDuckGo HTML (no-JS) |
+| yahoo | web | Yahoo 搜索 |
+| qwant | web | Qwant 搜索 |
+| baidu |  | 百度搜索 |
+| sogou |  | 搜狗搜索 |
+| quark |  | 夸克/神马搜索 |
+| seznam |  | Seznam 搜索 |
+| marginalia |  | Marginalia 搜索 |
+| mwmbl |  | Mwmbl 搜索 |
+
+### images（24）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| google_images | web | Google 图片搜索 |
+| bing_images | web | Bing 图片搜索 |
+| duckduckgo_extra | videos, news | DuckDuckGo Extra（需设 `ddg_category=images`） |
+| unsplash |  | Unsplash 图片（需 API key） |
+| imgur |  | Imgur 图片 |
+| wallhaven |  | Wallhaven 壁纸（需 API key） |
+| artic |  | 芝加哥艺术学院藏品 |
+| artstation |  | ArtStation 作品 |
+| deviantart |  | DeviantArt |
+| findthatmeme |  | FindThatMeme 表情包 |
+| flickr |  | Flickr（需 API key） |
+| flickr_noapi |  | Flickr（无 API key） |
+| ipernity |  | Ipernity |
+| loc |  | 美国国会图书馆照片 |
+| openclipart |  | OpenClipArt 矢量图 |
+| openverse |  | Openverse CC 媒体 |
+| pexels |  | Pexels 图片 |
+| pinterest |  | Pinterest |
+| pixabay |  | Pixabay 媒体 |
+| pixiv |  | Pixiv 插画 |
+| public_domain_image_archive |  | Public Domain Image Archive |
+| sogou_images |  | 搜狗图片 |
+| www1x |  | 1x 摄影 |
+| frinkiac |  | Frinkiac 辛普森一家截图 |
+
+### videos（24）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| google_videos | web | Google 视频搜索 |
+| bing_videos | web | Bing 视频搜索 |
+| youtube_noapi | music | YouTube（无 API key） |
+| youtube_api | music | YouTube Data API v3（需 API key） |
+| vimeo |  | Vimeo 视频 |
+| invidious |  | Invidious（YouTube 前端） |
+| piped |  | Piped（YouTube 前端） |
+| bilibili |  | B站视频搜索 |
+| 360search_videos |  | 360Search 视频 |
+| acfun |  | Acfun 视频 |
+| bitchute |  | Bitchute 视频 |
+| ccc_media |  | media.ccc.de |
+| dailymotion |  | Dailymotion 视频 |
+| digbt | music, files | DigBT 种子 |
+| ina |  | INA（法国） |
+| iqiyi |  | 爱奇艺视频 |
+| mediathekviewweb |  | MediathekViewWeb（德国） |
+| niconico |  | Niconico 视频 |
+| odysee |  | Odysee 视频 |
+| peertube |  | Peertube 联邦视频 |
+| rumble |  | Rumble 视频 |
+| sepiasearch |  | SepiaSearch 联邦视频 |
+| sogou_videos |  | 搜狗视频 |
+| tubearchivist |  | Tube Archivist（自托管，需 base_url+token） |
+
+### music（8）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| deezer |  | Deezer 音乐 |
+| genius | lyrics | Genius 歌词 |
+| bandcamp |  | Bandcamp 音乐 |
+| mixcloud |  | Mixcloud |
+| radio_browser | radio | Radio Browser 电台 |
+| soundcloud |  | SoundCloud |
+| spotify |  | Spotify（需 client credentials） |
+| yandex_music |  | Yandex Music |
+
+### news（7）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| google_news |  | Google 新闻搜索 |
+| bing_news |  | Bing 新闻搜索 |
+| yahoo_news |  | Yahoo News |
+| sogou_wechat |  | 搜狗微信公众号文章 |
+| ansa |  | Ansa（意大利） |
+| il_post |  | Il Post（意大利） |
+| reuters |  | Reuters |
+
+### it（10）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| github | repos | GitHub 仓库搜索 |
+| gitlab | repos | GitLab 仓库搜索（需 base_url） |
+| gitea | repos | Gitea/Forgejo 仓库搜索 |
+| sourcehut | repos | SourceHut 仓库搜索 |
+| npm | packages | NPM 包搜索 |
+| docker_hub | packages | Docker Hub 镜像搜索 |
+| crates | packages | Rust crates 搜索 |
+| pypi | packages | PyPI 包搜索 |
+| stackexchange | q&a | Stack Exchange（StackOverflow） |
+| hackernews | news | Hacker News 搜索 |
+
+### science（8）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| arxiv | scientific publications | arXiv 预印本 |
+| crossref | scientific publications | Crossref 学术元数据 |
+| openalex | scientific publications | OpenAlex 学术作品 |
+| semantic_scholar | scientific publications | Semantic Scholar 论文 |
+| pubmed | scientific publications | PubMed 生物医学文献 |
+| pdbe |  | PDBe 蛋白质结构 |
+| astrophysics_data_system | scientific publications | NASA ADS（需 API key） |
+| scanr_structures |  | ScanR 法国研究机构 |
+
+### social media（6）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| reddit |  | Reddit 搜索 |
+| 9gag |  | 9GAG |
+| lemmy |  | Lemmy（Communities/Users/Posts/Comments） |
+| mastodon |  | Mastodon（accounts/hashtags） |
+| mrs |  | Matrix Rooms Search（需 base_url） |
+| tootfinder |  | Tootfinder（Mastodon 帖子） |
+
+### movies（4）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| imdb |  | IMDB |
+| moviepilot |  | Moviepilot（德国） |
+| rottentomatoes |  | Rotten Tomatoes |
+| senscritique |  | SensCritique（法国） |
+
+### files（2）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| 1337x |  | 1337x 种子搜索 |
+| nyaa |  | Nyaa 动漫种子搜索 |
+
+### code（1）
+
+| 引擎 | 其它分类 | 说明 |
+|------|---------|------|
+| github_code | it | GitHub 代码搜索 |
+
+### 无分类（2）— 必须用 `-e <name>` 指定
+
+`categories = []`，与 SearXNG 一致。默认搜索会跳过它们。
+
+| 引擎 | 说明 |
+|------|------|
+| emojipedia | Emojipedia Emoji 参考 |
+| wikipedia | Wikipedia 摘要 |
 
 ## 安装
 
