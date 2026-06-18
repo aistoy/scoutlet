@@ -58,6 +58,7 @@ def request(query, params):
     params.setdefault("cookies", {})
     params["cookies"]["g_rated"] = safesearch_map[params.get("safesearch", 0)]
     params["allow_redirects"] = False
+    params["raise_for_httperror"] = True
     return params
 
 

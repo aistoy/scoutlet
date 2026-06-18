@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from scoutlet.engine_loader import load_engine
+from scoutlet.exceptions import SearchEngineAccessDeniedException
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "engines" / "pixabay"
 
@@ -55,3 +56,16 @@ class TestPixabayParser:
         # 302 status means "no results on this page"
         results = pixabay.response(MockResponse(data, status_code=302))
         assert results == []
+
+    def test_request_enables_http_error_check(self, pixabay):
+        params = pixabay.request("hello", {"pageno": 1})
+        assert params["raise_for_httperror"] is True
+
+    def test_access_denied_raised_on_cloudflare_block(self, pixabay):
+        # Cloudflare returns 403 with an HTML challenge page; the bootstrap
+        # check in search.py raises before the JSON parser ever runs.
+        from scoutlet.network import raise_for_httperror
+
+        resp = MockResponse("<html><title>Just a moment...</title></html>", status_code=403)
+        with pytest.raises(SearchEngineAccessDeniedException):
+            raise_for_httperror(resp)
