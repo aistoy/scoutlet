@@ -899,6 +899,18 @@
             doSearch();
         });
 
+        // Enter in the search input must trigger search explicitly: the form
+        // also contains the engine filter `.ms-search` text input, which puts
+        // the field count past the one-input threshold for implicit submission
+        // (https://html.spec.whatwg.org/#implicit-submission). The IME guard
+        // keeps Enter confirming CJK composition instead of submitting.
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
         // "/" focuses search input (unless already typing in a field).
         document.addEventListener('keydown', (e) => {
             if (e.key === '/' && document.activeElement !== input) {
