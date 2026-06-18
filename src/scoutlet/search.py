@@ -6,6 +6,7 @@ Orchestrates: build params → concurrent engine execution → aggregate results
 from __future__ import annotations
 
 import asyncio
+import re
 import typing as t
 
 import httpx
@@ -19,6 +20,36 @@ from scoutlet import network
 import logging
 
 log = logging.getLogger("scoutlet.search")
+
+
+# Default engine sets used when neither `engines=` nor `categories=` is given.
+# Targeted at human users running CLI/WebUI without args; agents are expected
+# to pass explicit engines (see docs/agent_guide.md).
+DEFAULT_ENGINES_BASE = ("google", "bing", "mwmbl", "marginalia")
+DEFAULT_ENGINES_ZH_EXTRA = ("baidu", "sogou", "brave")
+DEFAULT_ENGINES_NONZH_EXTRA = ("brave", "yahoo", "duckduckgo")
+
+_HAN_RE = re.compile(r"[一-鿿]")
+_KANA_RE = re.compile(r"[぀-ヿ]")
+_HANGUL_RE = re.compile(r"[가-힯]")
+
+
+def _is_chinese_query(query: str) -> bool:
+    """Return True when the query is likely Chinese (Han, no kana/hangul).
+
+    Han characters appear in both Chinese and Japanese; requiring the absence
+    of kana/hangul filters out Japanese/Korean. Pure-ASCII queries return
+    False (fall through to the non-Chinese default).
+    """
+    if not query:
+        return False
+    return bool(_HAN_RE.search(query)) and not _KANA_RE.search(query) and not _HANGUL_RE.search(query)
+
+
+def _resolve_default_engines(query: str) -> list[str]:
+    """Pick the default engine list based on query language."""
+    extra = DEFAULT_ENGINES_ZH_EXTRA if _is_chinese_query(query) else DEFAULT_ENGINES_NONZH_EXTRA
+    return list(DEFAULT_ENGINES_BASE) + list(extra)
 
 
 def _build_default_params(
@@ -226,10 +257,13 @@ async def search(
 
     Args:
         query: Search query string
-        engines: List of engine names (e.g., ["google", "bing"]). If both this
-            and `categories` are None, defaults to the "general" category.
-        categories: Search by category instead (e.g., ["general"]). If both
-            this and `engines` are None, defaults to ["general"].
+        engines: List of engine names (e.g., ["google", "bing"]). When None
+            and ``categories`` is also None, a language-aware default set is
+            used (Chinese queries pick Chinese-friendly engines; otherwise an
+            international set). Pass explicitly to override.
+        categories: Search by category instead (e.g., ["general"]). When
+            given, loads all engines in those categories. Both None triggers
+            the default set above.
         pageno: Page number (1-indexed)
         language: Language code (e.g., "en", "all")
         time_range: Time filter ("day", "week", "month", "year")
@@ -250,23 +284,23 @@ async def search(
     # Resolve engines to load
     if engines:
         engine_names = engines
-    else:
-        # Default to the "general" category when neither engines nor categories
-        # are specified. Loading every engine by default pulls in ones that need
-        # out-of-band config (spotify, youtube_api, tubearchivist, MRS) or that
-        # only make sense for specific query types (images, videos, music),
-        # producing a wall of setup warnings and parser noise for a plain query.
-        # Pass engines=[...] explicitly to opt out of this default.
-        if not categories:
-            categories = ["general"]
-        # Peek each engine's categories without running setup(), then load only
-        # matches — avoids setup() noise from unrelated engines (e.g., spotify,
-        # youtube_api) when the user asked for a specific category.
+    elif categories:
+        # Explicit category-based loading: peek each engine's categories
+        # without running setup() to avoid noise from unrelated engines
+        # (spotify, youtube_api, etc.).
         engine_names = []
         for name in engine_loader.list_available_engines(engine_dir):
             cats = engine_loader.peek_engine_categories(name, engine_dir)
             if any(c in cats for c in categories):
                 engine_names.append(name)
+    else:
+        # No engines, no categories → language-aware default for human users.
+        # Designed for CLI/WebUI; agents should pass engines explicitly.
+        engine_names = _resolve_default_engines(query)
+        log.debug(
+            "Default engine set for query %r (chinese=%s): %s",
+            query, _is_chinese_query(query), engine_names,
+        )
 
     # Load engines that are not already in the registry
     missing = [n for n in engine_names if n not in engine_loader.engines]
