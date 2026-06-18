@@ -220,6 +220,7 @@ async def search(
     search_cdp_endpoint: str | None = None,
     search_auto_launch_browser: bool = False,
     search_headless: bool | None = None,
+    search_adapter_backend: str | None = None,
 ) -> list[SearchResult]:
     """Execute a search across multiple engines concurrently.
 
@@ -240,6 +241,8 @@ async def search(
         search_cdp_endpoint: CDP endpoint override for search fallback
         search_auto_launch_browser: Auto-launch Chrome when fallback is needed
         search_headless: Override managed browser headless/headful mode
+        search_adapter_backend: Global HTTP adapter backend ("httpx" or
+            "fingerprint"). Per-engine ``http_client`` overrides this.
 
     Returns:
         List of aggregated, sorted SearchResult objects
@@ -295,8 +298,8 @@ async def search(
         eng_headless = getattr(eng, 'headless', True) if search_headless is None else search_headless
         eng_browser_args = getattr(eng, 'browser_args', None)
         eng_block_resources = getattr(eng, 'block_resources', True)
-        # Per-engine adapter backend: "" means use global default
-        eng_adapter = getattr(eng, 'http_client', "") or None
+        # Per-engine adapter backend wins over the global flag; "" means unset.
+        eng_adapter = getattr(eng, 'http_client', "") or search_adapter_backend
         params = _build_default_params(
             query=query,
             pageno=pageno,
@@ -352,6 +355,7 @@ def search_sync(
     search_cdp_endpoint: str | None = None,
     search_auto_launch_browser: bool = False,
     search_headless: bool | None = None,
+    search_adapter_backend: str | None = None,
 ) -> list[SearchResult]:
     """Synchronous wrapper for search()."""
     return asyncio.run(search(
@@ -369,4 +373,5 @@ def search_sync(
         search_cdp_endpoint=search_cdp_endpoint,
         search_auto_launch_browser=search_auto_launch_browser,
         search_headless=search_headless,
+        search_adapter_backend=search_adapter_backend,
     ))

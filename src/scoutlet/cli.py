@@ -150,6 +150,14 @@ def main():
         action="store_true",
         help="Use a visible Chrome window instead of headless mode for browser fallback",
     )
+    parser.add_argument(
+        "--adapter-backend",
+        choices=["httpx", "default", "fingerprint"],
+        default=None,
+        help="HTTP client backend (default: httpx). 'fingerprint' uses primp with "
+             "browser TLS impersonation to bypass Cloudflare-style blocks; install "
+             "with: uv sync --extra fingerprint",
+    )
 
     args = parser.parse_args()
 
@@ -197,6 +205,7 @@ def main():
             search_cdp_endpoint=args.cdp_endpoint,
             search_auto_launch_browser=args.auto_launch_browser,
             search_headless=not args.headful,
+            search_adapter_backend=args.adapter_backend,
         )
     except KeyboardInterrupt:
         sys.exit(1)

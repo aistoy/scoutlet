@@ -68,3 +68,35 @@ class TestCLI:
         assert captured["search_headless"] is False
         assert captured["search_cdp_endpoint"] == "http://localhost:9333"
         assert "No results found." in capsys.readouterr().out
+
+    def test_adapter_backend_flag_passed(self, monkeypatch, capsys):
+        from scoutlet import cli
+
+        captured = {}
+
+        def fake_search_sync(**kwargs):
+            captured.update(kwargs)
+            return []
+
+        monkeypatch.setattr(cli, "search_sync", fake_search_sync)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["scoutlet", "python asyncio", "-e", "bing", "--adapter-backend", "fingerprint"],
+        )
+
+        cli.main()
+
+        assert captured["search_adapter_backend"] == "fingerprint"
+
+    def test_adapter_backend_invalid_choice_rejected(self, monkeypatch, capsys):
+        from scoutlet import cli
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["scoutlet", "python asyncio", "-e", "bing", "--adapter-backend", "curl"],
+        )
+
+        with pytest.raises(SystemExit):
+            cli.main()
