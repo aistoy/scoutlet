@@ -280,6 +280,16 @@ results = search_sync("test", engines=["google"])
 pip install -e ".[browser]"
 ```
 
+CLI 也支持同样能力：
+
+```bash
+scoutlet "test" -e google --fallback-to-browser --auto-launch-browser
+scoutlet "test" -e google --fallback-to-browser --auto-launch-browser --headful
+scoutlet "test" -e google --fallback-to-browser --cdp-endpoint http://localhost:9333
+```
+
+`--auto-launch-browser` 会隐式启用 browser fallback。`--headful` 会使用可见浏览器窗口，而不是 headless 模式。
+
 **方式二：手动启动 Chrome**
 
 提前启动 Chrome 并开启远程调试端口：

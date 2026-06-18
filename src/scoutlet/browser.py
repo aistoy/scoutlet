@@ -23,8 +23,10 @@ import os
 import platform
 import re
 import signal
+import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import typing as t
@@ -102,6 +104,38 @@ def _parse_cdp_port(endpoint: str) -> int:
         return 9222
 
 
+def _default_user_data_dir(endpoint: str) -> str:
+    """Return a port-scoped Chrome profile path for managed browsers."""
+    return os.path.join(
+        tempfile.gettempdir(), f"scoutlet-chrome-profile-{_parse_cdp_port(endpoint)}"
+    )
+
+
+def _cdp_endpoint_with_port(endpoint: str, port: int) -> str:
+    """Return endpoint URL with a different port."""
+    from urllib.parse import urlparse, urlunparse
+
+    parsed = urlparse(endpoint)
+    host = parsed.hostname or "localhost"
+    if ":" in host and not host.startswith("["):
+        host = f"[{host}]"
+    netloc = f"{host}:{port}"
+    return urlunparse((parsed.scheme or "http", netloc, parsed.path, "", "", ""))
+
+
+def _find_free_cdp_endpoint(endpoint: str) -> str:
+    """Find a free local endpoint using the same host/scheme as endpoint."""
+    from urllib.parse import urlparse
+
+    parsed = urlparse(endpoint)
+    host = parsed.hostname or "localhost"
+    family = socket.AF_INET6 if ":" in host else socket.AF_INET
+    with socket.socket(family, socket.SOCK_STREAM) as sock:
+        sock.bind((host, 0))
+        port = sock.getsockname()[1]
+    return _cdp_endpoint_with_port(endpoint, port)
+
+
 # ---------------------------------------------------------------------------
 # Anti-bot / block page detection
 # ---------------------------------------------------------------------------
@@ -112,8 +146,8 @@ _ENGINE_BLOCK_PATTERNS: list[tuple[re.Pattern[str], str]] = [
      "Google CAPTCHA"),
     (re.compile(r"bing\.com/security/|bing\.com/secure/", re.I),
      "Bing block"),
-    (re.compile(r"duckduckgo\.com/.*[?&]t=hc_", re.I),
-     "DDG rate limit"),
+    (re.compile(r"duckduckgo\.com/.*[?&]t=hc_|id\s*=\s*[\"']challenge-form[\"']", re.I),
+     "DDG challenge"),
 ]
 
 # Generic anti-bot patterns (only trigger on short pages < 2KB)
@@ -130,6 +164,40 @@ _GENERIC_BLOCK_KEYWORDS: list[tuple[re.Pattern[str], str]] = [
 ]
 
 _BLOCK_PAGE_SIZE_THRESHOLD = 2048  # 2KB
+
+
+def _build_post_form_script(url: str, post_data: dict[str, t.Any]) -> str:
+    """Build a browser-side form submit script for POST navigation."""
+    form_data = json.dumps(
+        [[str(k), "" if v is None else str(v)] for k, v in post_data.items()]
+    )
+
+    return f"""
+                (function() {{
+                    let form = document.createElement('form');
+                    form.action = {json.dumps(url)};
+                    form.method = 'POST';
+                    let data = {form_data};
+                    for (let [name, value] of data) {{
+                        let input = document.createElement('input');
+                        input.name = name;
+                        input.value = value;
+                        form.appendChild(input);
+                    }}
+                    document.body.appendChild(form);
+                    form.submit();
+                }})();
+                """
+
+
+def _build_blocked_url_patterns() -> list[str]:
+    """Build CDP URL patterns for lightweight resource blocking."""
+    patterns: set[str] = set()
+    for ext in _BLOCKED_RESOURCE_EXTENSIONS:
+        patterns.add(f"*{ext}")
+        patterns.add(f"*{ext}?*")
+        patterns.add(f"*{ext}#*")
+    return sorted(patterns)
 
 
 class BlockDetectionResult:
@@ -199,6 +267,66 @@ def verify_cdp_endpoint(endpoint: str, attempts: int = 3) -> bool:
     return False
 
 
+def get_cdp_version(endpoint: str) -> dict[str, t.Any] | None:
+    """Fetch CDP /json/version metadata."""
+    from urllib.parse import urlparse, urlunparse
+
+    if endpoint.startswith(("ws://", "wss://")):
+        return None
+
+    parsed = urlparse(endpoint)
+    version_url = urlunparse((
+        parsed.scheme, parsed.netloc, "/json/version", "", "", ""
+    ))
+    try:
+        req = urllib.request.Request(version_url)
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            if resp.status != 200:
+                return None
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
+def cdp_endpoint_is_headless(endpoint: str) -> bool:
+    """Return True when the CDP endpoint is backed by HeadlessChrome."""
+    version = get_cdp_version(endpoint) or {}
+    browser = str(version.get("Browser", ""))
+    user_agent = str(version.get("User-Agent", ""))
+    return "HeadlessChrome" in browser or "HeadlessChrome" in user_agent
+
+
+def resolve_cdp_endpoint_for_launch(
+    endpoint: str,
+    *,
+    auto_launch: bool = False,
+    headless: bool = True,
+) -> str:
+    """Choose the endpoint to use for browser fallback.
+
+    If a user explicitly requests headful auto-launch but the requested
+    endpoint is already occupied by a headless Chrome, launch a new visible
+    browser on a free local port instead of silently reusing headless Chrome.
+    """
+    if not auto_launch or headless:
+        return endpoint
+
+    if not verify_cdp_endpoint(endpoint, attempts=1):
+        return endpoint
+
+    if not cdp_endpoint_is_headless(endpoint):
+        return endpoint
+
+    resolved = _find_free_cdp_endpoint(endpoint)
+    logger.warning(
+        "CDP endpoint %s is already used by HeadlessChrome; "
+        "launching a headful browser at %s",
+        endpoint,
+        resolved,
+    )
+    return resolved
+
+
 # ---------------------------------------------------------------------------
 # Managed browser (auto-launch)
 # ---------------------------------------------------------------------------
@@ -217,9 +345,7 @@ class ManagedBrowser:
         self.port = _parse_cdp_port(endpoint)
         self.headless = headless
         self.browser_args = browser_args or []
-        self.user_data_dir = user_data_dir or os.path.join(
-            tempfile.gettempdir(), "scoutlet-chrome-profile"
-        )
+        self.user_data_dir = user_data_dir or _default_user_data_dir(endpoint)
         self._process: subprocess.Popen | None = None
 
     def start(self) -> bool:
@@ -258,7 +384,7 @@ class ManagedBrowser:
             self._process = subprocess.Popen(args, **kwargs)
 
             # Wait for CDP endpoint to become ready
-            if verify_cdp_endpoint(self.endpoint, attempts=5):
+            if verify_cdp_endpoint(self.endpoint, attempts=8):
                 logger.info("Browser started, CDP ready at %s", self.endpoint)
                 return True
             else:
@@ -314,10 +440,6 @@ class ManagedBrowser:
         args.extend(self.browser_args)
         return args
 
-
-import tempfile  # noqa: E402 — needed for default user_data_dir
-
-
 # ---------------------------------------------------------------------------
 # BrowserRunner — CDP connection management
 # ---------------------------------------------------------------------------
@@ -356,14 +478,7 @@ class BrowserRunner:
 
     def close(self) -> None:
         """Close the CDP connection."""
-        if self._browser:
-            try:
-                tabs = self._browser.list_tab()
-                for tab in tabs:
-                    self._browser.close_tab(tab)
-            except Exception:
-                pass
-            self._browser = None
+        self._browser = None
 
     def navigate(self, url: str, timeout: float = 15.0) -> str:
         """Navigate to URL and return rendered HTML.
@@ -428,30 +543,7 @@ class BrowserRunner:
             tab.call_method("Page.enable")
 
             if post_data:
-                # Build a form submission script
-                form_parts = [
-                    f"name={json.dumps(k)}, value={json.dumps(v)}"
-                    for k, v in post_data.items()
-                ]
-                form_data = "[" + ", ".join(form_parts) + "]"
-
-                script = f"""
-                (function() {{
-                    let form = document.createElement('form');
-                    form.action = {json.dumps(url)};
-                    form.method = 'POST';
-                    let data = {form_data};
-                    for (let [name, value] of data) {{
-                        let input = document.createElement('input');
-                        input.name = name;
-                        input.value = value;
-                        form.appendChild(input);
-                    }}
-                    document.body.appendChild(form);
-                    form.submit();
-                }})();
-                """
-
+                script = _build_post_form_script(url, post_data)
                 base_url = url.split("?")[0]
                 tab.call_method("Page.navigate", url=base_url)
                 self._wait_for_load(tab, 5)
@@ -480,35 +572,11 @@ class BrowserRunner:
         """Block unnecessary resources (images, fonts, media, CSS) via CDP."""
         tab.call_method("Network.enable")
 
-        tab.set_listener("Network.requestWillBeSent", lambda **kwargs: None)
-
-        # Use Fetch domain to intercept and abort unwanted requests
         try:
-            tab.call_method("Fetch.enable", patterns=[
-                {"urlPattern": "*", "requestStage": "Request"}
-            ])
-
-            def _on_request_paused(**kwargs):
-                request_id = kwargs.get("requestId", "")
-                url = kwargs.get("request", {}).get("url", "")
-                if self._should_block_url(url):
-                    try:
-                        tab.call_method("Fetch.failRequest",
-                                        requestId=request_id,
-                                        reason="BlockedByClient")
-                    except Exception:
-                        pass
-                else:
-                    try:
-                        tab.call_method("Fetch.continueRequest",
-                                        requestId=request_id)
-                    except Exception:
-                        pass
-
-            tab.set_listener("Fetch.requestPaused", _on_request_paused)
+            tab.call_method("Network.setBlockedURLs",
+                            urls=_build_blocked_url_patterns())
         except Exception:
-            # Fetch domain might not be available in all Chrome versions
-            logger.debug("Fetch.enable not available, skipping resource blocking")
+            logger.debug("Network.setBlockedURLs not available, skipping resource blocking")
 
     @staticmethod
     def _should_block_url(url: str) -> bool:
@@ -568,7 +636,18 @@ def get_browser_runner(
 ) -> BrowserRunner:
     """Get or create the global browser runner."""
     global _browser_runner
+    normalized_endpoint = endpoint.rstrip("/")
     with _runner_lock:
+        if (
+            _browser_runner is not None
+            and (
+                _browser_runner.endpoint != normalized_endpoint
+                or _browser_runner.block_resources != block_resources
+            )
+        ):
+            _browser_runner.close()
+            _browser_runner = None
+
         if _browser_runner is None:
             _browser_runner = BrowserRunner(
                 endpoint=endpoint, block_resources=block_resources,
@@ -619,7 +698,15 @@ def ensure_browser_ready(
 
     global _managed_browser
     with _runner_lock:
-        if _managed_browser is None or not _managed_browser.is_running:
+        needs_new_browser = (
+            _managed_browser is None
+            or not _managed_browser.is_running
+            or _managed_browser.endpoint != endpoint
+            or _managed_browser.headless != headless
+        )
+        if needs_new_browser:
+            if _managed_browser is not None:
+                _managed_browser.stop()
             _managed_browser = ManagedBrowser(
                 endpoint=endpoint,
                 headless=headless,
@@ -662,9 +749,15 @@ def run_via_cdp(
     Returns:
         tuple of (rendered_html, http_status_code)
     """
+    effective_cdp_endpoint = resolve_cdp_endpoint_for_launch(
+        cdp_endpoint,
+        auto_launch=auto_launch_browser,
+        headless=headless,
+    )
+
     # Ensure browser is available
     if not ensure_browser_ready(
-        endpoint=cdp_endpoint,
+        endpoint=effective_cdp_endpoint,
         auto_launch=auto_launch_browser,
         headless=headless,
         browser_args=browser_args,
@@ -672,14 +765,14 @@ def run_via_cdp(
         raise SearchEngineCaptchaException(
             suspended_time=0,
             message=(
-                f"CDP browser not available at {cdp_endpoint}. "
-                f"Start Chrome with --remote-debugging-port={_parse_cdp_port(cdp_endpoint)} "
+                f"CDP browser not available at {effective_cdp_endpoint}. "
+                f"Start Chrome with --remote-debugging-port={_parse_cdp_port(effective_cdp_endpoint)} "
                 f"or set auto_launch_browser=True"
             ),
         )
 
     # Reuse global runner
-    runner = get_browser_runner(endpoint=cdp_endpoint, block_resources=block_resources)
+    runner = get_browser_runner(endpoint=effective_cdp_endpoint, block_resources=block_resources)
 
     try:
         if method.upper() == "POST" and post_data:
@@ -700,7 +793,7 @@ def run_via_cdp(
                 close_browser_runner()
                 global _managed_browser
                 _managed_browser = ManagedBrowser(
-                    endpoint=cdp_endpoint,
+                    endpoint=effective_cdp_endpoint,
                     headless=False,
                     browser_args=browser_args,
                 )
@@ -710,7 +803,7 @@ def run_via_cdp(
                         method=method,
                         post_data=post_data,
                         headers=headers,
-                        cdp_endpoint=cdp_endpoint,
+                        cdp_endpoint=effective_cdp_endpoint,
                         timeout=timeout,
                         auto_launch_browser=True,
                         headless=False,

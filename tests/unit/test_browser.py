@@ -26,6 +26,12 @@ class TestDetectBlockPage:
         assert result.blocked is True
         assert "DDG" in result.reason
 
+    def test_ddg_challenge_form_detected(self):
+        html = '<html><body><form id="challenge-form"></form></body></html>'
+        result = detect_block_page(html)
+        assert result.blocked is True
+        assert "DDG" in result.reason
+
     # --- Generic detection (short pages only) ---
 
     def test_access_denied_on_short_page(self):

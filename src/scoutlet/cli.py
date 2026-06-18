@@ -130,6 +130,26 @@ def main():
         action="store_true",
         help="With --ui, don't auto-open the browser",
     )
+    parser.add_argument(
+        "--fallback-to-browser",
+        action="store_true",
+        help="Use CDP browser fallback when search engines hit anti-bot blocks",
+    )
+    parser.add_argument(
+        "--auto-launch-browser",
+        action="store_true",
+        help="Auto-launch Chrome/Chromium when CDP browser fallback is needed",
+    )
+    parser.add_argument(
+        "--cdp-endpoint",
+        default="http://localhost:9222",
+        help="Chrome DevTools Protocol endpoint (default: http://localhost:9222)",
+    )
+    parser.add_argument(
+        "--headful",
+        action="store_true",
+        help="Use a visible Chrome window instead of headless mode for browser fallback",
+    )
 
     args = parser.parse_args()
 
@@ -159,6 +179,7 @@ def main():
 
     engines_list = args.engines.split(",") if args.engines else None
     categories_list = args.categories.split(",") if args.categories else None
+    browser_fallback = args.fallback_to_browser or args.auto_launch_browser
 
     try:
         results = search_sync(
@@ -172,6 +193,10 @@ def main():
             timeout=args.timeout,
             engine_dir=args.engine_dir,
             proxy=args.proxy,
+            search_fallback_to_browser=browser_fallback,
+            search_cdp_endpoint=args.cdp_endpoint,
+            search_auto_launch_browser=args.auto_launch_browser,
+            search_headless=not args.headful,
         )
     except KeyboardInterrupt:
         sys.exit(1)

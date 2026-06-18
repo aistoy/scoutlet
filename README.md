@@ -281,6 +281,16 @@ Requires the browser dependency:
 pip install -e ".[browser]"
 ```
 
+The same behavior is available from CLI:
+
+```bash
+scoutlet "test" -e google --fallback-to-browser --auto-launch-browser
+scoutlet "test" -e google --fallback-to-browser --auto-launch-browser --headful
+scoutlet "test" -e google --fallback-to-browser --cdp-endpoint http://localhost:9333
+```
+
+`--auto-launch-browser` implicitly enables browser fallback. `--headful` uses a visible browser window instead of headless mode.
+
 **Option 2: Manually start Chrome**
 
 Start Chrome with remote debugging port beforehand:

@@ -216,6 +216,10 @@ async def search(
     timeout: float = 10.0,
     engine_dir: str | None = None,
     proxy: str | None = None,
+    search_fallback_to_browser: bool = False,
+    search_cdp_endpoint: str | None = None,
+    search_auto_launch_browser: bool = False,
+    search_headless: bool | None = None,
 ) -> list[SearchResult]:
     """Execute a search across multiple engines concurrently.
 
@@ -230,6 +234,10 @@ async def search(
         timeout: Per-engine timeout in seconds
         engine_dir: Custom engine directory
         proxy: HTTP/SOCKS5 proxy URL (e.g., "socks5://127.0.0.1:1080")
+        search_fallback_to_browser: Enable CDP fallback for all selected engines
+        search_cdp_endpoint: CDP endpoint override for search fallback
+        search_auto_launch_browser: Auto-launch Chrome when fallback is needed
+        search_headless: Override managed browser headless/headful mode
 
     Returns:
         List of aggregated, sorted SearchResult objects
@@ -276,10 +284,10 @@ async def search(
     for eng in active_engines:
         # Per-engine proxy override: engine.proxies takes precedence over global proxy
         eng_proxy = getattr(eng, 'proxies', None) or proxy
-        eng_fallback = getattr(eng, 'fallback_to_browser', False)
-        eng_cdp_endpoint = getattr(eng, 'cdp_endpoint', "http://localhost:9222")
-        eng_auto_launch = getattr(eng, 'auto_launch_browser', False)
-        eng_headless = getattr(eng, 'headless', True)
+        eng_fallback = getattr(eng, 'fallback_to_browser', False) or search_fallback_to_browser
+        eng_cdp_endpoint = search_cdp_endpoint or getattr(eng, 'cdp_endpoint', "http://localhost:9222")
+        eng_auto_launch = getattr(eng, 'auto_launch_browser', False) or search_auto_launch_browser
+        eng_headless = getattr(eng, 'headless', True) if search_headless is None else search_headless
         eng_browser_args = getattr(eng, 'browser_args', None)
         eng_block_resources = getattr(eng, 'block_resources', True)
         # Per-engine adapter backend: "" means use global default
@@ -335,6 +343,10 @@ def search_sync(
     timeout: float = 10.0,
     engine_dir: str | None = None,
     proxy: str | None = None,
+    search_fallback_to_browser: bool = False,
+    search_cdp_endpoint: str | None = None,
+    search_auto_launch_browser: bool = False,
+    search_headless: bool | None = None,
 ) -> list[SearchResult]:
     """Synchronous wrapper for search()."""
     return asyncio.run(search(
@@ -348,4 +360,8 @@ def search_sync(
         timeout=timeout,
         engine_dir=engine_dir,
         proxy=proxy,
+        search_fallback_to_browser=search_fallback_to_browser,
+        search_cdp_endpoint=search_cdp_endpoint,
+        search_auto_launch_browser=search_auto_launch_browser,
+        search_headless=search_headless,
     ))
