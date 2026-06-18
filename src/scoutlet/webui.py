@@ -34,19 +34,28 @@ def _load_template() -> str:
 
 
 def _engine_summary() -> dict:
-    """Build {categories, engines} without running setup() on any engine.
+    """Build {categories, engines, engines_by_category} without setup() calls.
 
     Uses peek_engine_categories so spotify/youtube_api and friends don't emit
-    setup noise or take network round-trips at UI startup.
+    setup noise or take network round-trips at UI startup. The category→engines
+    mapping lets the UI narrow the engine list when one or more categories are
+    selected.
     """
     from scoutlet.engine_loader import list_available_engines, peek_engine_categories
 
     cats: set[str] = set()
     engines = list_available_engines()
+    by_cat: dict[str, list[str]] = {}
     for name in engines:
-        for c in peek_engine_categories(name):
+        eng_cats = peek_engine_categories(name)
+        for c in eng_cats:
             cats.add(c)
-    return {"categories": sorted(cats), "engines": sorted(engines)}
+            by_cat.setdefault(c, []).append(name)
+    return {
+        "categories": sorted(cats),
+        "engines": sorted(engines),
+        "engines_by_category": {c: sorted(names) for c, names in by_cat.items()},
+    }
 
 
 def _parse_search_params(qs: dict[str, list[str]]) -> dict:

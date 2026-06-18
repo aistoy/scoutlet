@@ -722,14 +722,65 @@
         });
 
         // --- Populate filter dropdowns from /api/engines ---
+        // The category→engines mapping drives a cascading filter: picking one
+        // or more categories narrows the engine multiselect to engines in any
+        // of them. Engines previously checked but no longer visible get pruned.
+        let allEngines = [];
+        let enginesByCategory = {};
+
+        function selectedCategoryValues() {
+            const catMs = document.querySelector('.multiselect[data-name="category"]');
+            if (!catMs) return [];
+            return Array.from(catMs.querySelectorAll('.ms-option input:checked'))
+                .map(cb => cb.value);
+        }
+
+        function refreshEngineOptions() {
+            const engMs = document.querySelector('.multiselect[data-name="engines"]');
+            if (!engMs) return;
+
+            const selectedCats = selectedCategoryValues();
+            let visible;
+            if (selectedCats.length === 0) {
+                visible = allEngines;
+            } else {
+                const set = new Set();
+                selectedCats.forEach(c => {
+                    (enginesByCategory[c] || []).forEach(e => set.add(e));
+                });
+                visible = Array.from(set).sort();
+            }
+
+            const stillChecked = new Set(
+                Array.from(engMs.querySelectorAll('.ms-option input:checked'))
+                    .map(cb => cb.value)
+                    .filter(v => visible.includes(v))
+            );
+
+            buildMultiselectOptions(engMs, visible);
+            engMs.querySelectorAll('.ms-option input').forEach(cb => {
+                if (stillChecked.has(cb.value)) cb.checked = true;
+            });
+            summarizeMultiselect(engMs);
+
+            // Re-apply any active search filter so the new option set respects it.
+            const search = engMs.querySelector('.ms-search');
+            if (search) {
+                search.dispatchEvent(new Event('input'));
+            }
+        }
+
         async function loadEngines() {
             try {
                 const resp = await fetch('/api/engines');
                 const data = await resp.json();
+                allEngines = data.engines || [];
+                enginesByCategory = data.engines_by_category || {};
                 const catMs = document.querySelector('.multiselect[data-name="category"]');
                 const engMs = document.querySelector('.multiselect[data-name="engines"]');
                 if (catMs) buildMultiselectOptions(catMs, data.categories || []);
-                if (engMs) buildMultiselectOptions(engMs, data.engines || []);
+                if (engMs) refreshEngineOptions();
+                if (catMs) catMs.addEventListener('change', refreshEngineOptions);
             } catch (err) {
                 console.error('engine list failed', err);
             }
