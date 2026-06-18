@@ -27,7 +27,6 @@ from scoutlet.engines.google import (
     get_google_info,
     time_range_dict,
     filter_mapping,
-    suggestion_xpath,
     detect_google_sorry,
 )
 
@@ -193,9 +192,5 @@ def response(resp):
                     'template': 'videos.html',
                 }
             )
-
-    # parse suggestion
-    for suggestion in eval_xpath_list(dom, suggestion_xpath):
-        results.append({'suggestion': extract_text(suggestion)})
 
     return results

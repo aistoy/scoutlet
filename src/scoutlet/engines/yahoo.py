@@ -146,7 +146,4 @@ def response(resp):
             'content': " ".join(html_to_text(content).strip().split()),
         })
 
-    for suggestion in eval_xpath_list(dom, '//div[contains(@class, "AlsoTry")]//table//a'):
-        results.append({'suggestion': extract_text(suggestion)})
-
     return results
