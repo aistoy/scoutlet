@@ -109,8 +109,38 @@ def main():
         action="store_true",
         help="With --list-engines, group engines by category",
     )
+    parser.add_argument(
+        "--ui",
+        action="store_true",
+        help="Launch local web UI (browser-based search interface)",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Web UI bind host (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=5123,
+        help="Web UI port (default: 5123; auto-bumps if taken)",
+    )
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="With --ui, don't auto-open the browser",
+    )
 
     args = parser.parse_args()
+
+    if args.ui:
+        from scoutlet.webui import run_server
+        run_server(
+            host=args.host,
+            port=args.port,
+            open_browser=not args.no_browser,
+        )
+        return
 
     if args.list_engines:
         if args.by_category:

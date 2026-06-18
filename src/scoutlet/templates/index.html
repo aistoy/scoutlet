@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoutLet — Local Search Aggregator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --muted-color: #777777;
+            --border-color: #000000;
+            --hover-bg: #f5f5f5;
+            --accent: #ffe600;
+            --error-color: #c00;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        /* Header */
+        header {
+            min-height: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 14px;
+        }
+
+        .brand-small {
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: var(--text-color);
+            visibility: hidden;
+        }
+
+        header nav a {
+            color: var(--muted-color);
+            text-decoration: none;
+            margin-left: 24px;
+            border-bottom: 1px dashed transparent;
+            transition: color 0.1s ease;
+        }
+
+        header nav a:hover {
+            color: var(--text-color);
+            border-bottom-color: var(--text-color);
+        }
+
+        /* Main container */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        /* Home view: hero + search anchored near the top */
+        body.view-home main {
+            justify-content: flex-start;
+            padding-top: 5vh;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logo {
+            font-family: var(--font-mono);
+            font-size: 52px;
+            font-weight: bold;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            user-select: none;
+            text-transform: uppercase;
+        }
+
+        .tagline {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted-color);
+            line-height: 2;
+            margin: 0 auto 36px;
+            max-width: 540px;
+            text-align: left;
+            letter-spacing: 0.2px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tagline-row {
+            position: relative;
+            padding-left: 18px;
+        }
+
+        .tagline-row::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .tagline em {
+            font-style: italic;
+            color: var(--text-color);
+            font-weight: 700;
+        }
+
+        /* Search wrapper */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 50px 16px 20px; /* right room for the dual-purpose toggle */
+            font-size: 16px;
+            font-family: var(--font-mono);
+            border: 2px solid var(--border-color);
+            outline: none;
+            background: transparent;
+            color: var(--text-color);
+            box-shadow: 3px 3px 0px var(--border-color);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .search-input:focus {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px var(--border-color);
+        }
+
+        .toggle-options-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            transition: transform 0.2s ease, opacity 0.1s ease;
+        }
+
+        .toggle-options-btn:hover { opacity: 0.6; }
+        .toggle-options-btn.open {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        /* Filter dropdown */
+        .dropdown-panel {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            background-color: var(--bg-color);
+            border: 2px solid var(--border-color);
+            box-shadow: 4px 4px 0px var(--border-color);
+            width: 320px;
+            max-height: min(80vh, 620px);
+            overflow-y: auto;
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            z-index: 100;
+        }
+
+        .dropdown-panel.show { display: flex; }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-field label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-select:focus { background-color: var(--hover-bg); }
+
+        /* Multi-select */
+        .multiselect { position: relative; }
+
+        .ms-toggle {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 0;
+            outline: none;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .ms-toggle:hover, .ms-toggle.open { background-color: var(--hover-bg); }
+
+        .ms-summary {
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 8px;
+        }
+
+        .ms-caret {
+            flex-shrink: 0;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            transition: transform 0.15s ease;
+        }
+
+        .ms-toggle.open .ms-caret { transform: rotate(180deg); }
+
+        .ms-panel {
+            display: none;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            max-height: 220px;
+        }
+
+        .ms-panel.open { display: flex; }
+
+        .ms-search {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 6px 8px;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            outline: none;
+            width: 100%;
+            background: var(--hover-bg);
+        }
+
+        .ms-options {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 2px 0;
+        }
+
+        .ms-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 4px 10px;
+            cursor: pointer;
+            user-select: none;
+            word-break: break-all;
+        }
+
+        .ms-option:hover { background: var(--hover-bg); }
+
+        .ms-option input[type="checkbox"] {
+            margin: 0;
+            accent-color: #000;
+            flex-shrink: 0;
+        }
+
+        .ms-empty {
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-color);
+            text-align: center;
+        }
+
+        /* Results view */
+        body.view-results main { justify-content: flex-start; }
+        body.view-results .hero { display: none; }
+        body.view-results .brand-small { visibility: visible; }
+        body.view-results .search-zone { margin-top: 18px; margin-bottom: 18px; }
+
+        .results-view { display: none; }
+        body.view-results .results-view { display: block; }
+
+        .results-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted-color);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eaeaea;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .results-query { word-break: break-all; }
+
+        .result-item {
+            padding: 14px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .result-item:hover { background-color: var(--hover-bg); }
+
+        .result-meta {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-color);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .result-index {
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .result-engine-tag {
+            background: var(--border-color);
+            color: #fff;
+            padding: 1px 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .result-score { color: var(--muted-color); }
+
+        .result-title {
+            font-family: var(--font-sans);
+            font-size: 16px;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .result-title a {
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+        }
+
+        .result-title a:hover {
+            border-bottom-color: var(--text-color);
+        }
+
+        .result-url {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-color);
+            margin-bottom: 6px;
+            word-break: break-all;
+        }
+
+        .result-content {
+            font-size: 13px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .status-msg {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--muted-color);
+            text-align: center;
+            padding: 60px 0;
+        }
+
+        .status-msg.error {
+            color: var(--error-color);
+            border: 2px solid var(--error-color);
+            padding: 16px;
+            box-shadow: 3px 3px 0px var(--error-color);
+            margin: 24px 0;
+            text-align: left;
+            word-break: break-word;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border-color);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Footer */
+        footer {
+            margin-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted-color);
+            border-top: 1px solid #eaeaea;
+            padding-top: 16px;
+        }
+
+        footer a { color: var(--muted-color); text-decoration: none; }
+        footer a:hover { color: var(--text-color); }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: #f1f1f1;
+            padding: 2px 6px;
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .logo { font-size: 38px; }
+            .tagline { font-size: 12px; padding: 0 10px; }
+            .dropdown-panel { width: 100%; }
+            .search-input { padding-right: 46px; font-size: 14px; }
+            footer { flex-direction: column; gap: 10px; text-align: center; }
+        }
+    </style>
+</head>
+<body class="view-home">
+
+    <header>
+        <a href="/" class="brand-small" id="brandSmall">ScoutLet</a>
+        <nav>
+            <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://searxng.org" target="_blank" rel="noopener">SearXNG</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="hero">
+            <div class="logo">ScoutLet</div>
+            <div class="tagline">
+                <span class="tagline-row">Lightweight local search aggregation.</span>
+                <span class="tagline-row"><em>No API keys, No heavy dependencies</em>.</span>
+                <span class="tagline-row">Delivering powerful search capabilities to local agents.</span>
+            </div>
+        </div>
+
+        <div class="search-zone">
+            <div class="search-wrapper">
+                <form id="search-form" autocomplete="off">
+                    <input
+                        type="text"
+                        name="q"
+                        id="searchInput"
+                        class="search-input"
+                        placeholder="Ask ScoutLet to search..."
+                        autocomplete="off"
+                        autofocus
+                    >
+                    <button
+                        type="button"
+                        class="toggle-options-btn"
+                        id="toggleBtn"
+                        aria-label="Toggle filters"
+                    >
+                        <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 0h10L5 5z"/>
+                        </svg>
+                    </button>
+
+                    <div class="dropdown-panel" id="dropdownPanel">
+                        <div class="filter-field">
+                            <label>Category</label>
+                            <div class="multiselect" data-name="category" data-all-label="All">
+                                <button type="button" class="ms-toggle" aria-label="Category filter">
+                                    <span class="ms-summary">All</span>
+                                    <span class="ms-caret">▾</span>
+                                </button>
+                                <div class="ms-panel">
+                                    <div class="ms-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-field">
+                            <label>Engine</label>
+                            <div class="multiselect" data-name="engines" data-all-label="All (aggregate)">
+                                <button type="button" class="ms-toggle" aria-label="Engine filter">
+                                    <span class="ms-summary">All (aggregate)</span>
+                                    <span class="ms-caret">▾</span>
+                                </button>
+                                <div class="ms-panel">
+                                    <input type="text" class="ms-search" placeholder="filter engines..." autocomplete="off">
+                                    <div class="ms-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-field">
+                            <label>Language</label>
+                            <select name="language" class="filter-select">
+                                <option value="all">All</option>
+                                <option value="en">English</option>
+                                <option value="zh-CN">中文</option>
+                                <option value="ja">日本語</option>
+                                <option value="ko">한국어</option>
+                                <option value="de">Deutsch</option>
+                                <option value="fr">Français</option>
+                                <option value="es">Español</option>
+                                <option value="ru">Русский</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-field">
+                            <label>Time Range</label>
+                            <select name="time_range" class="filter-select">
+                                <option value="">Any time</option>
+                                <option value="day">Past 24h</option>
+                                <option value="week">Past week</option>
+                                <option value="month">Past month</option>
+                                <option value="year">Past year</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="results-view">
+            <div class="results-bar">
+                <div id="resultsCount">—</div>
+                <div class="results-query" id="resultsQuery"></div>
+            </div>
+            <div id="resultsList"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div>v0.1.0-alpha · local</div>
+        <div>Launch: <code>scoutlet --ui</code></div>
+    </footer>
+
+    <script>
+        const form = document.getElementById('search-form');
+        const input = document.getElementById('searchInput');
+        const dropdownPanel = document.getElementById('dropdownPanel');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const resultsList = document.getElementById('resultsList');
+        const resultsCount = document.getElementById('resultsCount');
+        const resultsQuery = document.getElementById('resultsQuery');
+
+        // --- Dual-purpose toggle button ---
+        // Empty input  -> down-arrow: click opens filter dropdown.
+        // Has text      -> right-arrow "->": click submits the search.
+        const ICON_DROPDOWN = '<svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h10L5 5z"/></svg>';
+        const ICON_SEARCH = '<svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" xmlns="http://www.w3.org/2000/svg"><path d="M1 5h12M9 1l4 4-4 4"/></svg>';
+
+        function inputHasText() {
+            return (input.value || '').trim().length > 0;
+        }
+
+        function refreshToggleButton() {
+            if (inputHasText()) {
+                toggleBtn.innerHTML = ICON_SEARCH;
+                toggleBtn.classList.remove('open');
+                dropdownPanel.classList.remove('show');
+                toggleBtn.setAttribute('aria-label', 'Search');
+                toggleBtn.title = 'Search';
+            } else {
+                toggleBtn.innerHTML = ICON_DROPDOWN;
+                toggleBtn.setAttribute('aria-label', 'Toggle filters');
+                toggleBtn.title = 'Filters';
+            }
+        }
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (inputHasText()) {
+                form.requestSubmit();
+                return;
+            }
+            const isOpen = dropdownPanel.classList.toggle('show');
+            toggleBtn.classList.toggle('open', isOpen);
+        });
+
+        input.addEventListener('input', refreshToggleButton);
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownPanel.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                dropdownPanel.classList.remove('show');
+                toggleBtn.classList.remove('open');
+            }
+        });
+
+        refreshToggleButton();
+
+        // --- Multi-select wiring ---
+        // Each .multiselect has a toggle button (opens/closes its panel),
+        // an optional .ms-search input (filters options by substring), and
+        // a .ms-options container that we fill with checkboxes.
+        function buildMultiselectOptions(ms, values) {
+            const opts = ms.querySelector('.ms-options');
+            opts.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            values.forEach(value => {
+                const label = document.createElement('label');
+                label.className = 'ms-option';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.name = ms.dataset.name;
+                cb.value = value;
+                label.appendChild(cb);
+                label.appendChild(document.createTextNode(' ' + value));
+                frag.appendChild(label);
+            });
+            opts.appendChild(frag);
+        }
+
+        function summarizeMultiselect(ms) {
+            const checked = Array.from(ms.querySelectorAll('.ms-option input:checked'));
+            const summary = ms.querySelector('.ms-summary');
+            const allLabel = ms.dataset.allLabel || 'All';
+            if (checked.length === 0) {
+                summary.textContent = allLabel;
+                return;
+            }
+            if (checked.length <= 2) {
+                summary.textContent = checked.map(cb => cb.value).join(', ');
+            } else {
+                summary.textContent = checked[0].value + ' +' + (checked.length - 1) + ' more';
+            }
+        }
+
+        function closeAllMsPanels(except) {
+            document.querySelectorAll('.multiselect').forEach(ms => {
+                if (ms === except) return;
+                ms.querySelector('.ms-panel').classList.remove('open');
+                ms.querySelector('.ms-toggle').classList.remove('open');
+            });
+        }
+
+        function wireMultiselect(ms) {
+            const toggle = ms.querySelector('.ms-toggle');
+            const panel = ms.querySelector('.ms-panel');
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const willOpen = !panel.classList.contains('open');
+                closeAllMsPanels(ms);
+                panel.classList.toggle('open', willOpen);
+                toggle.classList.toggle('open', willOpen);
+                if (willOpen) {
+                    const search = ms.querySelector('.ms-search');
+                    if (search) setTimeout(() => search.focus(), 0);
+                }
+            });
+            ms.addEventListener('change', () => summarizeMultiselect(ms));
+            const search = ms.querySelector('.ms-search');
+            if (search) {
+                search.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    ms.querySelectorAll('.ms-option').forEach(opt => {
+                        const text = opt.textContent.toLowerCase();
+                        opt.style.display = text.includes(term) ? '' : 'none';
+                    });
+                });
+                search.addEventListener('click', (e) => e.stopPropagation());
+            }
+        }
+
+        document.querySelectorAll('.multiselect').forEach(wireMultiselect);
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multiselect')) closeAllMsPanels(null);
+        });
+
+        // --- Populate filter dropdowns from /api/engines ---
+        async function loadEngines() {
+            try {
+                const resp = await fetch('/api/engines');
+                const data = await resp.json();
+                const catMs = document.querySelector('.multiselect[data-name="category"]');
+                const engMs = document.querySelector('.multiselect[data-name="engines"]');
+                if (catMs) buildMultiselectOptions(catMs, data.categories || []);
+                if (engMs) buildMultiselectOptions(engMs, data.engines || []);
+            } catch (err) {
+                console.error('engine list failed', err);
+            }
+        }
+        loadEngines();
+
+        // --- Helpers ---
+        function escapeHtml(s) {
+            if (s === null || s === undefined) return '';
+            return String(s).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        function escapeAttr(s) {
+            return escapeHtml(s);
+        }
+
+        function truncate(s, n) {
+            if (!s) return '';
+            return s.length > n ? s.slice(0, n) + '…' : s;
+        }
+
+        function renderResults(data) {
+            if (!data.results || data.results.length === 0) {
+                resultsList.innerHTML = '<div class="status-msg">No results found.</div>';
+                return;
+            }
+            const html = data.results.map((r, i) => {
+                const engines = (r.engines && r.engines.length) ? r.engines : (r.engine ? [r.engine] : []);
+                const tags = engines.filter(Boolean).map(e =>
+                    `<span class="result-engine-tag">${escapeHtml(e)}</span>`
+                ).join(' ');
+                const score = r.score ? `<span class="result-score">score ${r.score.toFixed(2)}</span>` : '';
+                const title = r.title || '(no title)';
+                const url = r.url || '#';
+                const content = r.content ? `<div class="result-content">${escapeHtml(truncate(r.content, 300))}</div>` : '';
+                const img = r.img_src
+                    ? `<div style="margin-top:8px"><img src="${escapeAttr(r.img_src)}" alt="" style="max-width:200px;max-height:160px;border:1px solid #000"></div>`
+                    : '';
+                return `
+                    <div class="result-item">
+                        <div class="result-meta">
+                            <span class="result-index">#${i + 1}</span>
+                            ${tags}
+                            ${score}
+                        </div>
+                        <div class="result-title">
+                            <a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a>
+                        </div>
+                        <div class="result-url">${escapeHtml(url)}</div>
+                        ${content}
+                        ${img}
+                    </div>
+                `;
+            }).join('');
+            resultsList.innerHTML = html;
+        }
+
+        function switchToResultsView() {
+            document.body.classList.remove('view-home');
+            document.body.classList.add('view-results');
+        }
+
+        let currentRequest = null;
+
+        async function doSearch() {
+            const q = (input.value || '').trim();
+            if (!q) return;
+
+            switchToResultsView();
+
+            const fd = new FormData(form);
+            const params = new URLSearchParams();
+            params.set('q', q);
+            const cats = fd.getAll('category');
+            const engs = fd.getAll('engines');
+            const lang = fd.get('language');
+            const tr = fd.get('time_range');
+            if (cats.length) params.set('category', cats.join(','));
+            if (engs.length) params.set('engines', engs.join(','));
+            if (lang) params.set('language', lang);
+            if (tr) params.set('time_range', tr);
+
+            resultsQuery.textContent = `q: "${q}"`;
+            resultsCount.innerHTML = '<span class="spinner"></span>searching...';
+            resultsList.innerHTML = '';
+
+            // Cancel any pending request.
+            if (currentRequest) currentRequest.abort();
+            const controller = new AbortController();
+            currentRequest = controller;
+
+            try {
+                const resp = await fetch('/api/search?' + params.toString(), { signal: controller.signal });
+                const data = await resp.json();
+                if (data.error) {
+                    resultsCount.textContent = 'error';
+                    resultsList.innerHTML = `<div class="status-msg error">${escapeHtml(data.error)}</div>`;
+                    return;
+                }
+                const n = data.count || 0;
+                resultsCount.textContent = `${n} result${n === 1 ? '' : 's'}`;
+                renderResults(data);
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                resultsCount.textContent = 'error';
+                resultsList.innerHTML = `<div class="status-msg error">${escapeHtml(String(err))}</div>`;
+            } finally {
+                if (currentRequest === controller) currentRequest = null;
+            }
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            doSearch();
+        });
+
+        // "/" focuses search input (unless already typing in a field).
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== input) {
+                e.preventDefault();
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>
