@@ -46,12 +46,12 @@ def main():
     parser.add_argument(
         "--engines", "-e",
         default=None,
-        help="Comma-separated engine names (default: all available)",
+        help="Comma-separated engine names (overrides --categories)",
     )
     parser.add_argument(
         "--categories", "-c",
         default=None,
-        help="Comma-separated categories (e.g., general,news)",
+        help="Comma-separated categories (default: general)",
     )
     parser.add_argument(
         "--language", "-l",

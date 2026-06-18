@@ -225,8 +225,10 @@ async def search(
 
     Args:
         query: Search query string
-        engines: List of engine names (e.g., ["google", "bing"])
-        categories: Search by category instead (e.g., ["general"])
+        engines: List of engine names (e.g., ["google", "bing"]). If both this
+            and `categories` are None, defaults to the "general" category.
+        categories: Search by category instead (e.g., ["general"]). If both
+            this and `engines` are None, defaults to ["general"].
         pageno: Page number (1-indexed)
         language: Language code (e.g., "en", "all")
         time_range: Time filter ("day", "week", "month", "year")
@@ -245,7 +247,15 @@ async def search(
     # Resolve engines to load
     if engines:
         engine_names = engines
-    elif categories:
+    else:
+        # Default to the "general" category when neither engines nor categories
+        # are specified. Loading every engine by default pulls in ones that need
+        # out-of-band config (spotify, youtube_api, tubearchivist, MRS) or that
+        # only make sense for specific query types (images, videos, music),
+        # producing a wall of setup warnings and parser noise for a plain query.
+        # Pass engines=[...] explicitly to opt out of this default.
+        if not categories:
+            categories = ["general"]
         # Peek each engine's categories without running setup(), then load only
         # matches — avoids setup() noise from unrelated engines (e.g., spotify,
         # youtube_api) when the user asked for a specific category.
@@ -254,11 +264,6 @@ async def search(
             cats = engine_loader.peek_engine_categories(name, engine_dir)
             if any(c in cats for c in categories):
                 engine_names.append(name)
-    else:
-        # Default: use all loaded engines, or load from dir
-        if not engine_loader.engines:
-            engine_loader.load_engines(engine_dir=engine_dir)
-        engine_names = list(engine_loader.engines.keys())
 
     # Load engines that are not already in the registry
     missing = [n for n in engine_names if n not in engine_loader.engines]
