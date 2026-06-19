@@ -343,6 +343,46 @@
 
         .results-query { word-break: break-all; }
 
+        .engine-filter {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .engine-filter.show { display: flex; }
+
+        .engine-chip {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 4px 9px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.1s ease, color 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .engine-chip:hover { background: var(--hover-bg); }
+
+        .engine-chip.active {
+            background: var(--border-color);
+            color: #fff;
+        }
+
+        .engine-chip .chip-count {
+            opacity: 0.55;
+            font-size: 10px;
+        }
+
+        .engine-chip.active .chip-count { opacity: 0.85; }
+
         .result-item {
             padding: 14px 0;
             border-bottom: 1px solid #eaeaea;
@@ -579,6 +619,7 @@
                 <div id="resultsCount">—</div>
                 <div class="results-query" id="resultsQuery"></div>
             </div>
+            <div class="engine-filter" id="engineFilter"></div>
             <div id="resultsList"></div>
         </div>
     </main>
@@ -596,6 +637,7 @@
         const resultsList = document.getElementById('resultsList');
         const resultsCount = document.getElementById('resultsCount');
         const resultsQuery = document.getElementById('resultsQuery');
+        const engineFilterEl = document.getElementById('engineFilter');
 
         // --- Dual-purpose toggle button ---
         // Empty input  -> down-arrow: click opens filter dropdown.
@@ -804,14 +846,91 @@
             return s.length > n ? s.slice(0, n) + '…' : s;
         }
 
-        function renderResults(data) {
-            if (!data.results || data.results.length === 0) {
-                resultsList.innerHTML = '<div class="status-msg">No results found.</div>';
+        let currentResultsData = null;
+        const activeEngines = new Set();
+
+        function resultEngines(r) {
+            return (r.engines && r.engines.length) ? r.engines : (r.engine ? [r.engine] : []);
+        }
+
+        function getFilteredResults() {
+            if (!currentResultsData || !currentResultsData.results) return [];
+            if (activeEngines.size === 0) return currentResultsData.results;
+            return currentResultsData.results.filter(r =>
+                resultEngines(r).some(e => activeEngines.has(e))
+            );
+        }
+
+        function collectEngineCounts(results) {
+            const counts = new Map();
+            results.forEach(r => {
+                resultEngines(r).filter(Boolean).forEach(e => {
+                    counts.set(e, (counts.get(e) || 0) + 1);
+                });
+            });
+            return counts;
+        }
+
+        function renderEngineFilter() {
+            const results = (currentResultsData && currentResultsData.results) || [];
+            if (results.length === 0) {
+                engineFilterEl.classList.remove('show');
+                engineFilterEl.innerHTML = '';
                 return;
             }
-            const html = data.results.map((r, i) => {
-                const engines = (r.engines && r.engines.length) ? r.engines : (r.engine ? [r.engine] : []);
-                const tags = engines.filter(Boolean).map(e =>
+            const counts = collectEngineCounts(results);
+            // prune selections that no longer appear in this result set
+            Array.from(activeEngines).forEach(e => {
+                if (!counts.has(e)) activeEngines.delete(e);
+            });
+            if (counts.size === 0) {
+                engineFilterEl.classList.remove('show');
+                engineFilterEl.innerHTML = '';
+                return;
+            }
+            engineFilterEl.classList.add('show');
+            const allActive = activeEngines.size === 0;
+            const parts = [
+                `<button type="button" class="engine-chip${allActive ? ' active' : ''}" data-engine="__all__">All <span class="chip-count">${results.length}</span></button>`
+            ];
+            Array.from(counts.keys()).sort().forEach(name => {
+                const isActive = activeEngines.has(name);
+                parts.push(
+                    `<button type="button" class="engine-chip${isActive ? ' active' : ''}" data-engine="${escapeAttr(name)}">${escapeHtml(name)} <span class="chip-count">${counts.get(name)}</span></button>`
+                );
+            });
+            engineFilterEl.innerHTML = parts.join('');
+        }
+
+        engineFilterEl.addEventListener('click', (e) => {
+            const chip = e.target.closest('.engine-chip');
+            if (!chip) return;
+            const name = chip.dataset.engine;
+            if (name === '__all__') {
+                activeEngines.clear();
+            } else if (activeEngines.has(name)) {
+                activeEngines.delete(name);
+            } else {
+                activeEngines.add(name);
+            }
+            refreshResultsView();
+        });
+
+        function updateResultsCount() {
+            if (!currentResultsData) return;
+            const total = currentResultsData.count || currentResultsData.results.length;
+            if (activeEngines.size === 0) {
+                resultsCount.textContent = `${total} result${total === 1 ? '' : 's'}`;
+            } else {
+                const shown = getFilteredResults().length;
+                resultsCount.textContent = `${shown} of ${total} results`;
+            }
+        }
+
+        function renderResultItems(results) {
+            const html = results.map((r, i) => {
+                const engines = resultEngines(r).filter(Boolean);
+                const tags = engines.map(e =>
                     `<span class="result-engine-tag">${escapeHtml(e)}</span>`
                 ).join(' ');
                 const score = r.score ? `<span class="result-score">score ${r.score.toFixed(2)}</span>` : '';
@@ -838,6 +957,19 @@
                 `;
             }).join('');
             resultsList.innerHTML = html;
+        }
+
+        function refreshResultsView() {
+            renderEngineFilter();
+            updateResultsCount();
+            const filtered = getFilteredResults();
+            if (filtered.length === 0) {
+                resultsList.innerHTML = activeEngines.size > 0
+                    ? '<div class="status-msg">No results for selected engines.</div>'
+                    : '<div class="status-msg">No results found.</div>';
+                return;
+            }
+            renderResultItems(filtered);
         }
 
         function switchToResultsView() {
@@ -878,15 +1010,18 @@
                 const resp = await fetch('/api/search?' + params.toString(), { signal: controller.signal });
                 const data = await resp.json();
                 if (data.error) {
+                    currentResultsData = null;
+                    engineFilterEl.classList.remove('show');
                     resultsCount.textContent = 'error';
                     resultsList.innerHTML = `<div class="status-msg error">${escapeHtml(data.error)}</div>`;
                     return;
                 }
-                const n = data.count || 0;
-                resultsCount.textContent = `${n} result${n === 1 ? '' : 's'}`;
-                renderResults(data);
+                currentResultsData = data;
+                refreshResultsView();
             } catch (err) {
                 if (err.name === 'AbortError') return;
+                currentResultsData = null;
+                engineFilterEl.classList.remove('show');
                 resultsCount.textContent = 'error';
                 resultsList.innerHTML = `<div class="status-msg error">${escapeHtml(String(err))}</div>`;
             } finally {
