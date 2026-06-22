@@ -338,7 +338,10 @@ async def search(
 
     # Aggregate results from successful outcomes; fold every outcome
     # into the health registry so future searches know the state.
-    container = ResultContainer(engines_registry=engine_loader.engines)
+    container = ResultContainer(
+        engines_registry=engine_loader.engines,
+        health_registry=health,
+    )
     for (eng, *_), outcome in zip(engine_params, outcomes_list):
         # asyncio.gather(return_exceptions=True) wraps thread-level errors
         if isinstance(outcome, Exception):

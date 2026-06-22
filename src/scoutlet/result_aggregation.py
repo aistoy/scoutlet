@@ -5,6 +5,7 @@ Implements:
 - Hash-based deduplication
 - Result merging (keep longer text, merge engines, prefer HTTPS)
 - Category-grouped sorting
+- Two post-base adjustments: unique-engine bonus and bad-engine penalty
 """
 
 from __future__ import annotations
@@ -17,6 +18,12 @@ from scoutlet.result_types import SearchResult
 import logging
 
 log = logging.getLogger("scoutlet.aggregation")
+
+
+# Post-base score adjustments (applied in close()).
+# These are multiplicative on top of SearXNG's weight × Σ(1/position) base.
+UNIQUE_BONUS = 1.2          # result contributed by a single engine (no corroboration)
+HEALTH_PENALTY = 0.5        # sole contributor is currently "bad" (cooldown / low success rate)
 
 
 def calculate_score(result: SearchResult, engines_registry: dict[str, t.Any]) -> float:
@@ -77,12 +84,17 @@ class ResultContainer:
     Ported from SearXNG's ResultContainer with simplified logic.
     """
 
-    def __init__(self, engines_registry: dict[str, t.Any] | None = None):
+    def __init__(
+        self,
+        engines_registry: dict[str, t.Any] | None = None,
+        health_registry: t.Any | None = None,
+    ):
         self._results_map: dict[int, SearchResult] = {}
         self._lock = RLock()
         self._closed = False
         self._sorted: list[SearchResult] | None = None
         self.engines_registry = engines_registry or {}
+        self._health_registry = health_registry
 
     def extend(self, engine_name: str, results: list[SearchResult]) -> None:
         """Add results from an engine."""
@@ -124,10 +136,37 @@ class ResultContainer:
             existing.positions.append(position)
 
     def close(self) -> None:
-        """Close container and calculate scores."""
+        """Close container and calculate scores.
+
+        Three-stage scoring:
+          1. SearXNG base: weight × Σ(1/position), multi-engine corroboration
+             already boosts score via weight product and position count.
+          2. Unique-engine bonus: results contributed by a single engine get
+             UNIQUE_BONUS. Counteracts the corroboration bias that buries
+             diverse results under repetitive corroborated ones.
+          3. Health penalty: if the sole contributor is currently "bad"
+             (in cooldown or sub-threshold success rate), multiply by
+             HEALTH_PENALTY. We don't fully trust a flaky engine's unique
+             result. Corroborated results are exempt — a healthy engine
+             validating the same URL is a strong signal.
+        """
         self._closed = True
         for result in self._results_map.values():
             result.score = calculate_score(result, self.engines_registry)
+
+        if self._health_registry is None:
+            return
+
+        for result in self._results_map.values():
+            # Only adjust single-engine results; corroboration is trusted.
+            if len(result.engines) != 1:
+                continue
+            engine_name = next(iter(result.engines))
+            health = self._health_registry.get(engine_name)
+            if health.is_bad:
+                result.score *= HEALTH_PENALTY
+            else:
+                result.score *= UNIQUE_BONUS
 
     def get_ordered_results(self) -> list[SearchResult]:
         """Return sorted, deduplicated results.
