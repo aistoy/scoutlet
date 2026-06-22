@@ -240,22 +240,29 @@ Requires Python >= 3.10.
 from scoutlet import search_sync, search
 
 # Synchronous search (recommended for scripts)
-results = search_sync("python tutorial", engines=["google", "bing"])
+response = search_sync("python tutorial", engines=["google", "bing"])
 
-for r in results:
+# Results live under .results
+for r in response.results:
     print(f"[{','.join(r.engines)}] {r.title}")
     print(f"  {r.url}")
     print(f"  {r.content[:100]}")
     print(f"  score: {r.score:.2f}")
 
+# Diagnostics: which engines failed, which were skipped (cooldown etc.)
+for e in response.failed:
+    print(f"  engine {e.name}: {e.status.value} - {e.error}")
+for s in response.skipped:
+    print(f"  skipped {s.name}: {s.reason}")
+
 # Async search (for use in async programs)
-results = await search("python tutorial", engines=["google", "bing"])
+response = await search("python tutorial", engines=["google", "bing"])
 
 # Search by category
-results = search_sync("AI", categories=["general", "news"])
+response = search_sync("AI", categories=["general", "news"])
 
 # Specify language and time range
-results = search_sync("latest news", language="zh", time_range="day")
+response = search_sync("latest news", language="zh", time_range="day")
 ```
 
 ### CLI

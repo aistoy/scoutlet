@@ -59,9 +59,10 @@ search() / search_sync()
 - **`engine_loader.py`** — Three-tier loading: external dir (`~/.scoutlet/engines/`) overrides bundled (`src/scoutlet/engines/`). Engines are Python modules with `request()`/`response()` functions.
 - **`network.py`** — Thin httpx wrapper. `raise_for_httperror()` maps 403/503→AccessDenied, 429→TooManyRequests, other 4xx/5xx→APIException.
 - **`response_classifier.py`** — Pure-HTTP block-page detector. `detect_block_page()` checks engine-specific patterns (Google sorry, Bing block) and generic anti-bot keywords (Cloudflare, Akamai, PerimeterX). No browser dependency.
-- **`outcome.py`** — `EngineOutcome` + `FailureKind` enum returned by `_run_engine`. `classify_failure()` maps exceptions to FailureKind by type + execution phase. Internal; `search()` still returns `list[SearchResult]`.
+- **`outcome.py`** — `EngineOutcome` + `FailureKind` enum returned by `_run_engine`. `classify_failure()` maps exceptions to FailureKind by type + execution phase. Internal.
 - **`health.py`** — In-process `EngineHealthRegistry`. Tracks per-engine success/failure counts, latency EMA, cooldown. Thread-safe (engines run via `asyncio.to_thread`). Not persisted — cooldowns clear on process restart.
 - **`routing.py`** — Two-wave engine planning. General-category engines cap at 4 in wave one (high overlap); vertical engines all run wave one (unique coverage). Explicit `engines=[...]` bypasses waves entirely. Coverage check (10 results / 5 domains / 2 engines) gates wave two.
+- **`response.py`** — `SearchResponse` returned by `search()` / `search_sync()`. Holds `.results`, `.engines` (per-engine run info), `.skipped` (cooldown etc.). Use `.as_dict()` for JSON serialization.
 - **`traits.py`** — Engine language/region support loaded from `data/engine_traits.json`.
 - **`utils.py`** — XPath helpers, text extraction, user-agent generation, URL normalization. Ported from SearXNG.
 
@@ -76,7 +77,7 @@ Engines are adapted from SearXNG: change `from searx.*` → `from scoutlet.*`, r
 
 ### Key Design Decisions
 
-- `search()` returns `list[SearchResult]`, not raw dicts — the container normalizes, deduplicates, and scores before returning.
+- `search()` returns `SearchResponse`, not a bare list — agents get per-engine outcome and skipped-engine reasons alongside results. `response.results` behaves like the old list return for simple callers.
 - Hash-based dedup uses `template|netloc|path|params|query|fragment|img_src` — same URL from multiple engines gets merged (corroboration boosts score).
 - Per-engine HTTP failures are caught and classified into `FailureKind`; one broken engine doesn't abort the whole search. Engines in cooldown (CAPTCHA'd, rate-limited, or on a failure streak) are skipped before dispatch.
 - Health state is process-wide and not persisted — fresh process starts with no cooldowns.

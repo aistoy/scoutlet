@@ -82,7 +82,7 @@ def _do_search(params: dict) -> dict:
     if not params["query"]:
         return {"error": "empty query", "results": [], "count": 0}
 
-    results = search_sync(
+    response = search_sync(
         query=params["query"],
         engines=params["engines"],
         categories=params["categories"],
@@ -93,8 +93,10 @@ def _do_search(params: dict) -> dict:
     )
     return {
         "query": params["query"],
-        "count": len(results),
-        "results": [r.as_dict() for r in results],
+        "count": len(response.results),
+        "results": [r.as_dict() for r in response.results],
+        "engines": [e.as_dict() for e in response.engines],
+        "skipped": [s.as_dict() for s in response.skipped],
     }
 
 

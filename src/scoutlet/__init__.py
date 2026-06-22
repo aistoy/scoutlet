@@ -6,15 +6,20 @@ and result aggregation algorithm. Only API/CLI, no web UI.
 Usage:
     from scoutlet import search_sync
 
-    results = search_sync("python tutorial", engines=["brave", "qwant"])
-    for r in results:
+    response = search_sync("python tutorial", engines=["brave", "qwant"])
+    for r in response.results:
         print(f"[{','.join(r.engines)}] {r.title} - {r.url}")
 
+    # Inspect per-engine outcome (what failed, what was skipped)
+    for e in response.failed:
+        print(f"  {e.name}: {e.status.value} - {e.error}")
+
     # With proxy
-    results = search_sync("test", engines=["google"], proxy="socks5://127.0.0.1:1080")
+    response = search_sync("test", engines=["google"], proxy="socks5://127.0.0.1:1080")
 """
 
 from scoutlet.result_types import SearchResult
+from scoutlet.response import SearchResponse
 from scoutlet.search import search, search_sync
 from scoutlet.engine_loader import (
     load_engine,
@@ -23,5 +28,13 @@ from scoutlet.engine_loader import (
     engines as _engines,
 )
 
-__version__ = "0.1.0"
-__all__ = ["search", "search_sync", "SearchResult", "load_engine", "load_engines", "list_available_engines"]
+__version__ = "0.2.0"
+__all__ = [
+    "search",
+    "search_sync",
+    "SearchResult",
+    "SearchResponse",
+    "load_engine",
+    "load_engines",
+    "list_available_engines",
+]

@@ -169,7 +169,7 @@ def main():
     categories_list = args.categories.split(",") if args.categories else None
 
     try:
-        results = search_sync(
+        response = search_sync(
             query=args.query,
             engines=engines_list,
             categories=categories_list,
@@ -189,10 +189,10 @@ def main():
         sys.exit(1)
 
     if args.format == "json":
-        output = [r.as_dict() for r in results]
-        json.dump(output, sys.stdout, indent=2, default=str, ensure_ascii=False)
+        json.dump(response.as_dict(), sys.stdout, indent=2, default=str, ensure_ascii=False)
         print()  # trailing newline
     else:
+        results = response.results
         if not results:
             print("No results found.")
             return

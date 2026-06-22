@@ -16,6 +16,7 @@ from scoutlet import engine_loader
 from scoutlet.result_types import SearchResult
 from scoutlet.result_aggregation import ResultContainer
 from scoutlet.outcome import EngineOutcome, FailureKind, classify_failure
+from scoutlet.response import SearchResponse
 from scoutlet.utils import gen_useragent
 from scoutlet import network
 
@@ -235,7 +236,7 @@ async def search(
     engine_dir: str | None = None,
     proxy: str | None = None,
     search_adapter_backend: str | None = None,
-) -> list[SearchResult]:
+) -> SearchResponse:
     """Execute a search across multiple engines concurrently.
 
     Args:
@@ -258,7 +259,9 @@ async def search(
             "fingerprint"). Per-engine ``http_client`` overrides this.
 
     Returns:
-        List of aggregated, sorted SearchResult objects
+        SearchResponse with .results (list[SearchResult]), .engines
+        (per-engine run info, including failures), and .skipped (engines
+        filtered out before dispatch, e.g. in cooldown).
     """
     # Resolve engines to load
     if engines:
@@ -294,20 +297,24 @@ async def search(
     # cooldowns, so first search is unaffected.)
     from scoutlet.health import get_default_registry
     from scoutlet.routing import plan_waves, coverage_satisfied
+    from scoutlet.response import EngineRunInfo, SearchResponse, SkippedEngine
     health = get_default_registry()
-    active_engines = []
+    active_engines: list[t.Any] = []
+    skipped: list[SkippedEngine] = []
     for name in engine_names:
         eng = engine_loader.engines.get(name)
         if eng is None:
+            skipped.append(SkippedEngine(name=name, reason="not_loaded"))
             continue
         if not health.is_available(name):
             log.info("Engine '%s' skipped (in cooldown)", name)
+            skipped.append(SkippedEngine(name=name, reason="cooldown"))
             continue
         active_engines.append(eng)
 
     if not active_engines:
         log.warning("No engines available for search")
-        return []
+        return SearchResponse(results=[], engines=[], skipped=skipped)
 
     # Two-wave routing. Explicit `engines=[...]` bypasses waves — the
     # caller asked for these specific engines, we run them all. Default
@@ -358,32 +365,54 @@ async def search(
         ]
         return await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def _absorb(engine_params_list, outcomes_list, container):
+    def _process_outcomes(engine_params_list, outcomes_list):
+        """Update health + return clean list of EngineOutcome (no exceptions)."""
+        clean = []
         for (eng, *_), outcome in zip(engine_params_list, outcomes_list):
             if isinstance(outcome, Exception):
                 log.warning("Engine '%s' thread raised: %s", eng.name, outcome)
                 continue
             health.update(outcome)
-            if outcome.results:
-                container.extend(outcome.engine, outcome.results)
+            clean.append(outcome)
+        return clean
+
+    def _feed_container(container, outcomes):
+        for o in outcomes:
+            if o.results:
+                container.extend(o.engine, o.results)
+
+    def _build_response(final_results: list[SearchResult], all_outcomes: list[t.Any]) -> SearchResponse:
+        engine_runs = [
+            EngineRunInfo(
+                name=o.engine,
+                status=o.status,
+                elapsed_ms=o.elapsed_ms,
+                error=o.error,
+            )
+            for o in all_outcomes
+        ]
+        return SearchResponse(
+            results=final_results,
+            engines=engine_runs,
+            skipped=skipped,
+        )
 
     # --- Wave 1 ---
     first_params = _build_engine_params(first_wave, first_timeout)
-    first_outcomes = await _run_wave(first_params)
+    first_outcomes_raw = await _run_wave(first_params)
+    first_outcomes = _process_outcomes(first_params, first_outcomes_raw)
 
     container = ResultContainer(
         engines_registry=engine_loader.engines,
         health_registry=health,
     )
-    await _absorb(first_params, first_outcomes, container)
+    _feed_container(container, first_outcomes)
     container.close()
 
-    # Coverage check (skip when waves were bypassed — no wave 2 to run).
+    # Fast paths: no wave 2 to run, or wave 1 already covered it.
     if not second_wave:
-        return container.get_ordered_results()
+        return _build_response(container.get_ordered_results(), first_outcomes)
 
-    # Count coverage from closed container. We can inspect _results_map
-    # before get_ordered_results() because close() already scored everything.
     result_count = len(container._results_map)
     unique_domains = {
         (r.parsed_url.netloc if r.parsed_url else "")
@@ -394,7 +423,7 @@ async def search(
     }
 
     if coverage_satisfied(result_count, len(unique_domains), len(unique_engines)):
-        return container.get_ordered_results()
+        return _build_response(container.get_ordered_results(), first_outcomes)
 
     log.info(
         "Wave 1 coverage insufficient (results=%d, domains=%d, engines=%d); "
@@ -404,19 +433,17 @@ async def search(
 
     # --- Wave 2 ---
     second_params = _build_engine_params(second_wave, second_timeout)
-    second_outcomes = await _run_wave(second_params)
-    # Re-open container for extend, then re-score.
-    # ResultContainer supports extending before close() — emulate by building
-    # a fresh container with the same maps. Simpler: just re-create and
-    # re-feed both waves' successful results.
+    second_outcomes_raw = await _run_wave(second_params)
+    second_outcomes = _process_outcomes(second_params, second_outcomes_raw)
+
     combined = ResultContainer(
         engines_registry=engine_loader.engines,
         health_registry=health,
     )
-    await _absorb(first_params, first_outcomes, combined)
-    await _absorb(second_params, second_outcomes, combined)
+    _feed_container(combined, first_outcomes)
+    _feed_container(combined, second_outcomes)
     combined.close()
-    return combined.get_ordered_results()
+    return _build_response(combined.get_ordered_results(), first_outcomes + second_outcomes)
 
 
 def search_sync(
@@ -431,7 +458,7 @@ def search_sync(
     engine_dir: str | None = None,
     proxy: str | None = None,
     search_adapter_backend: str | None = None,
-) -> list[SearchResult]:
+) -> SearchResponse:
     """Synchronous wrapper for search()."""
     return asyncio.run(search(
         query=query,

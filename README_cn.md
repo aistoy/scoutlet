@@ -239,22 +239,29 @@ pip install -e ".[fingerprint]"
 from scoutlet import search_sync, search
 
 # 同步搜索（脚本推荐）
-results = search_sync("python tutorial", engines=["google", "bing"])
+response = search_sync("python tutorial", engines=["google", "bing"])
 
-for r in results:
+# 结果放在 response.results
+for r in response.results:
     print(f"[{','.join(r.engines)}] {r.title}")
     print(f"  {r.url}")
     print(f"  {r.content[:100]}")
     print(f"  score: {r.score:.2f}")
 
+# 诊断信息：哪些引擎失败了、哪些被跳过（cooldown 等）
+for e in response.failed:
+    print(f"  引擎 {e.name}: {e.status.value} - {e.error}")
+for s in response.skipped:
+    print(f"  跳过 {s.name}: {s.reason}")
+
 # 异步搜索（用于 async 程序）
-results = await search("python tutorial", engines=["google", "bing"])
+response = await search("python tutorial", engines=["google", "bing"])
 
 # 按分类搜索
-results = search_sync("AI", categories=["general", "news"])
+response = search_sync("AI", categories=["general", "news"])
 
 # 指定语言和时间范围
-results = search_sync("最新新闻", language="zh", time_range="day")
+response = search_sync("最新新闻", language="zh", time_range="day")
 ```
 
 ### CLI
