@@ -35,12 +35,19 @@ Live tests (require network) are gated behind `pytest.mark.live` and excluded by
 ```
 search() / search_sync()
   → engine_loader.load_engines()       # discover & register engine modules
-  → _build_default_params()            # per-engine params (headers, proxy, timeout)
-  → _run_engine() per engine           # in thread pool
+  → health filter                     # skip engines in cooldown
+  → routing.plan_waves()              # split into first/second wave
+  → _run_engine() per engine          # wave one, in thread pool
       → engine.request(query, params)  # engine fills URL/headers
       → network.get/post()             # HTTP request
       → engine.response(resp)          # engine parses HTML/JSON → list[dict]
-  → ResultContainer.extend()           # dedup, merge, score
+      → returns EngineOutcome          # status + results + elapsed_ms
+  → health.update(outcome)            # feed registry
+  → ResultContainer.extend()          # dedup, merge, base score
+  → ResultContainer.close()           # apply diversity bonus + health penalty
+  → if coverage insufficient:
+      → _run_engine() per engine      # wave two
+      → re-aggregate
   → ResultContainer.get_ordered_results()
 ```
 
@@ -54,6 +61,7 @@ search() / search_sync()
 - **`response_classifier.py`** — Pure-HTTP block-page detector. `detect_block_page()` checks engine-specific patterns (Google sorry, Bing block) and generic anti-bot keywords (Cloudflare, Akamai, PerimeterX). No browser dependency.
 - **`outcome.py`** — `EngineOutcome` + `FailureKind` enum returned by `_run_engine`. `classify_failure()` maps exceptions to FailureKind by type + execution phase. Internal; `search()` still returns `list[SearchResult]`.
 - **`health.py`** — In-process `EngineHealthRegistry`. Tracks per-engine success/failure counts, latency EMA, cooldown. Thread-safe (engines run via `asyncio.to_thread`). Not persisted — cooldowns clear on process restart.
+- **`routing.py`** — Two-wave engine planning. General-category engines cap at 4 in wave one (high overlap); vertical engines all run wave one (unique coverage). Explicit `engines=[...]` bypasses waves entirely. Coverage check (10 results / 5 domains / 2 engines) gates wave two.
 - **`traits.py`** — Engine language/region support loaded from `data/engine_traits.json`.
 - **`utils.py`** — XPath helpers, text extraction, user-agent generation, URL normalization. Ported from SearXNG.
 

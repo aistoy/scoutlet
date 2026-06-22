@@ -293,6 +293,7 @@ async def search(
     # (Health registry is in-process; a fresh process starts with no
     # cooldowns, so first search is unaffected.)
     from scoutlet.health import get_default_registry
+    from scoutlet.routing import plan_waves, coverage_satisfied
     health = get_default_registry()
     active_engines = []
     for name in engine_names:
@@ -308,51 +309,114 @@ async def search(
         log.warning("No engines available for search")
         return []
 
-    # Build params for each engine
-    engine_params = []
-    for eng in active_engines:
-        # Per-engine proxy override: engine.proxies takes precedence over global proxy
-        eng_proxy = getattr(eng, 'proxies', None) or proxy
-        # Per-engine adapter backend wins over the global flag; "" means unset.
-        eng_adapter = getattr(eng, 'http_client', "") or search_adapter_backend
-        params = _build_default_params(
-            query=query,
-            pageno=pageno,
-            language=language,
-            time_range=time_range,
-            safesearch=safesearch,
-            timeout=min(timeout, getattr(eng, 'timeout', 10.0)),
-            proxy=eng_proxy,
-        )
-        engine_params.append((eng, params, eng_adapter))
+    # Two-wave routing. Explicit `engines=[...]` bypasses waves — the
+    # caller asked for these specific engines, we run them all. Default
+    # and category-based selection go through wave planning: general-
+    # category engines cap at GENERAL_FIRST_WAVE (overlap is high),
+    # vertical engines all run in wave one (unique coverage).
+    first_wave, second_wave = plan_waves(active_engines, health, explicit=engines is not None)
+    log.debug(
+        "waves: first=%d (%s), second=%d (%s)",
+        len(first_wave), [e.name for e in first_wave],
+        len(second_wave), [e.name for e in second_wave],
+    )
 
-    # Execute engines concurrently via threads
+    # Time budget: keep total worst-case close to the caller's `timeout`.
+    # Wave 1 gets 60%, wave 2 gets the remaining 40% (only spent if wave 2
+    # actually fires). If waves are bypassed (explicit), full timeout.
+    if second_wave:
+        first_timeout = timeout * 0.6
+        second_timeout = max(timeout * 0.4, 1.0)
+    else:
+        first_timeout = timeout
+        second_timeout = 0.0
+
+    def _build_engine_params(eng_list, per_timeout: float) -> list[tuple[t.Any, dict[str, t.Any], str | None]]:
+        out = []
+        for eng in eng_list:
+            eng_proxy = getattr(eng, 'proxies', None) or proxy
+            eng_adapter = getattr(eng, 'http_client', "") or search_adapter_backend
+            params = _build_default_params(
+                query=query,
+                pageno=pageno,
+                language=language,
+                time_range=time_range,
+                safesearch=safesearch,
+                timeout=min(per_timeout, getattr(eng, 'timeout', 10.0)),
+                proxy=eng_proxy,
+            )
+            out.append((eng, params, eng_adapter))
+        return out
+
     async def _run_in_thread(eng, params, adapter):
         return await asyncio.to_thread(_run_engine, eng, params, adapter)
 
-    tasks = [
-        _run_in_thread(eng, params, adapter)
-        for eng, params, adapter in engine_params
-    ]
-    outcomes_list = await asyncio.gather(*tasks, return_exceptions=True)
+    async def _run_wave(engine_params_list):
+        tasks = [
+            _run_in_thread(eng, params, adapter)
+            for eng, params, adapter in engine_params_list
+        ]
+        return await asyncio.gather(*tasks, return_exceptions=True)
 
-    # Aggregate results from successful outcomes; fold every outcome
-    # into the health registry so future searches know the state.
+    async def _absorb(engine_params_list, outcomes_list, container):
+        for (eng, *_), outcome in zip(engine_params_list, outcomes_list):
+            if isinstance(outcome, Exception):
+                log.warning("Engine '%s' thread raised: %s", eng.name, outcome)
+                continue
+            health.update(outcome)
+            if outcome.results:
+                container.extend(outcome.engine, outcome.results)
+
+    # --- Wave 1 ---
+    first_params = _build_engine_params(first_wave, first_timeout)
+    first_outcomes = await _run_wave(first_params)
+
     container = ResultContainer(
         engines_registry=engine_loader.engines,
         health_registry=health,
     )
-    for (eng, *_), outcome in zip(engine_params, outcomes_list):
-        # asyncio.gather(return_exceptions=True) wraps thread-level errors
-        if isinstance(outcome, Exception):
-            log.warning("Engine '%s' thread raised: %s", eng.name, outcome)
-            continue
-        health.update(outcome)
-        if outcome.results:
-            container.extend(outcome.engine, outcome.results)
-
+    await _absorb(first_params, first_outcomes, container)
     container.close()
-    return container.get_ordered_results()
+
+    # Coverage check (skip when waves were bypassed — no wave 2 to run).
+    if not second_wave:
+        return container.get_ordered_results()
+
+    # Count coverage from closed container. We can inspect _results_map
+    # before get_ordered_results() because close() already scored everything.
+    result_count = len(container._results_map)
+    unique_domains = {
+        (r.parsed_url.netloc if r.parsed_url else "")
+        for r in container._results_map.values()
+    }
+    unique_engines = {
+        eng for r in container._results_map.values() for eng in r.engines
+    }
+
+    if coverage_satisfied(result_count, len(unique_domains), len(unique_engines)):
+        return container.get_ordered_results()
+
+    log.info(
+        "Wave 1 coverage insufficient (results=%d, domains=%d, engines=%d); "
+        "launching wave 2",
+        result_count, len(unique_domains), len(unique_engines),
+    )
+
+    # --- Wave 2 ---
+    second_params = _build_engine_params(second_wave, second_timeout)
+    second_outcomes = await _run_wave(second_params)
+    # Re-open container for extend, then re-score.
+    # ResultContainer supports extending before close() — emulate by building
+    # a fresh container with the same maps. Simpler: just re-create and
+    # re-feed both waves' successful results.
+    combined = ResultContainer(
+        engines_registry=engine_loader.engines,
+        health_registry=health,
+    )
+    await _absorb(first_params, first_outcomes, combined)
+    await _absorb(second_params, second_outcomes, combined)
+    combined.close()
+    return combined.get_ordered_results()
 
 
 def search_sync(
