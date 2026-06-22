@@ -52,6 +52,8 @@ search() / search_sync()
 - **`engine_loader.py`** — Three-tier loading: external dir (`~/.scoutlet/engines/`) overrides bundled (`src/scoutlet/engines/`). Engines are Python modules with `request()`/`response()` functions.
 - **`network.py`** — Thin httpx wrapper. `raise_for_httperror()` maps 403/503→AccessDenied, 429→TooManyRequests, other 4xx/5xx→APIException.
 - **`response_classifier.py`** — Pure-HTTP block-page detector. `detect_block_page()` checks engine-specific patterns (Google sorry, Bing block) and generic anti-bot keywords (Cloudflare, Akamai, PerimeterX). No browser dependency.
+- **`outcome.py`** — `EngineOutcome` + `FailureKind` enum returned by `_run_engine`. `classify_failure()` maps exceptions to FailureKind by type + execution phase. Internal; `search()` still returns `list[SearchResult]`.
+- **`health.py`** — In-process `EngineHealthRegistry`. Tracks per-engine success/failure counts, latency EMA, cooldown. Thread-safe (engines run via `asyncio.to_thread`). Not persisted — cooldowns clear on process restart.
 - **`traits.py`** — Engine language/region support loaded from `data/engine_traits.json`.
 - **`utils.py`** — XPath helpers, text extraction, user-agent generation, URL normalization. Ported from SearXNG.
 
@@ -68,7 +70,8 @@ Engines are adapted from SearXNG: change `from searx.*` → `from scoutlet.*`, r
 
 - `search()` returns `list[SearchResult]`, not raw dicts — the container normalizes, deduplicates, and scores before returning.
 - Hash-based dedup uses `template|netloc|path|params|query|fragment|img_src` — same URL from multiple engines gets merged (corroboration boosts score).
-- Per-engine HTTP failures are caught and logged; one broken engine doesn't abort the whole search.
+- Per-engine HTTP failures are caught and classified into `FailureKind`; one broken engine doesn't abort the whole search. Engines in cooldown (CAPTCHA'd, rate-limited, or on a failure streak) are skipped before dispatch.
+- Health state is process-wide and not persisted — fresh process starts with no cooldowns.
 - SOCKS5 proxy requires `httpx[socks]` extra — not installed by default.
 - Optional `primp` adapter (`fingerprint` extra) provides TLS-layer impersonation; no headless-browser fallback shipped in main.
 

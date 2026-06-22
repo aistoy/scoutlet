@@ -289,12 +289,20 @@ async def search(
             engine_dir=engine_dir,
         )
 
-    # Get loaded engine modules
+    # Get loaded engine modules, skipping engines currently in cooldown.
+    # (Health registry is in-process; a fresh process starts with no
+    # cooldowns, so first search is unaffected.)
+    from scoutlet.health import get_default_registry
+    health = get_default_registry()
     active_engines = []
     for name in engine_names:
         eng = engine_loader.engines.get(name)
-        if eng:
-            active_engines.append(eng)
+        if eng is None:
+            continue
+        if not health.is_available(name):
+            log.info("Engine '%s' skipped (in cooldown)", name)
+            continue
+        active_engines.append(eng)
 
     if not active_engines:
         log.warning("No engines available for search")
@@ -328,13 +336,15 @@ async def search(
     ]
     outcomes_list = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # Aggregate results from successful outcomes
+    # Aggregate results from successful outcomes; fold every outcome
+    # into the health registry so future searches know the state.
     container = ResultContainer(engines_registry=engine_loader.engines)
     for (eng, *_), outcome in zip(engine_params, outcomes_list):
         # asyncio.gather(return_exceptions=True) wraps thread-level errors
         if isinstance(outcome, Exception):
             log.warning("Engine '%s' thread raised: %s", eng.name, outcome)
             continue
+        health.update(outcome)
         if outcome.results:
             container.extend(outcome.engine, outcome.results)
 
