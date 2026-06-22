@@ -90,6 +90,7 @@ Engines are adapted from SearXNG: change `from searx.*` → `from scoutlet.*`, r
 tests/
   unit/           # Core logic tests (offline, no network)
   engines/        # Engine parser fixture tests (offline, uses saved HTML/JSON)
+  integration/    # Full-pipeline tests via respx (offline, exercises engine.request → network → response → aggregate)
   fixtures/       # Minimal HTML/JSON fixtures per engine
   live/           # Network-dependent tests (gated by pytest.mark.live)
 ```
