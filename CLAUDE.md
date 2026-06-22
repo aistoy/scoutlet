@@ -12,7 +12,7 @@ scoutlet is a lightweight Python search aggregation library that reuses SearXNG'
 # Install (editable)
 uv sync
 uv sync --extra dev        # with pytest, respx, pytest-timeout
-uv sync --extra browser    # with pychrome for CDP fallback
+uv sync --extra fingerprint # with primp for TLS impersonation
 
 # Run tests
 uv run pytest tests/                          # all tests (offline)
@@ -51,7 +51,7 @@ search() / search_sync()
 - **`result_aggregation.py`** — `ResultContainer` implements SearXNG scoring: `weight × Σ(1/position)`, plus merge (longer content wins, HTTPS preferred) and category-grouped sorting.
 - **`engine_loader.py`** — Three-tier loading: external dir (`~/.scoutlet/engines/`) overrides bundled (`src/scoutlet/engines/`). Engines are Python modules with `request()`/`response()` functions.
 - **`network.py`** — Thin httpx wrapper. `raise_for_httperror()` maps 403/503→AccessDenied, 429→TooManyRequests, other 4xx/5xx→APIException.
-- **`browser.py`** — CDP anti-bot fallback. Three-tier: HTTP → headless Chrome → headful Chrome. `detect_block_page()` checks engine-specific patterns (Google sorry, Bing block) and generic anti-bot keywords (Cloudflare, Akamai). `pychrome` is optional.
+- **`response_classifier.py`** — Pure-HTTP block-page detector. `detect_block_page()` checks engine-specific patterns (Google sorry, Bing block) and generic anti-bot keywords (Cloudflare, Akamai, PerimeterX). No browser dependency.
 - **`traits.py`** — Engine language/region support loaded from `data/engine_traits.json`.
 - **`utils.py`** — XPath helpers, text extraction, user-agent generation, URL normalization. Ported from SearXNG.
 
@@ -68,8 +68,9 @@ Engines are adapted from SearXNG: change `from searx.*` → `from scoutlet.*`, r
 
 - `search()` returns `list[SearchResult]`, not raw dicts — the container normalizes, deduplicates, and scores before returning.
 - Hash-based dedup uses `template|netloc|path|params|query|fragment|img_src` — same URL from multiple engines gets merged (corroboration boosts score).
-- `pychrome` import is guarded with try/except — the library works without it; only CDP fallback needs it.
+- Per-engine HTTP failures are caught and logged; one broken engine doesn't abort the whole search.
 - SOCKS5 proxy requires `httpx[socks]` extra — not installed by default.
+- Optional `primp` adapter (`fingerprint` extra) provides TLS-layer impersonation; no headless-browser fallback shipped in main.
 
 ## Test Structure
 

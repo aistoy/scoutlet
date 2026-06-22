@@ -30,7 +30,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-browser = ["pychrome"]
 fingerprint = ["primp>=1.2.3"]
 dev = [
     "pytest",

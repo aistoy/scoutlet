@@ -82,7 +82,6 @@ class TestLoadBundledEngine:
         assert hasattr(eng, "timeout")
         assert eng.timeout == ENGINE_DEFAULTS["timeout"]
         assert hasattr(eng, "weight")
-        assert eng.fallback_to_browser is False
 
     def test_engine_overrides_applied(self):
         eng = load_engine("bing", weight=5.0, timeout=20.0)

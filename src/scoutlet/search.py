@@ -94,12 +94,6 @@ def _build_default_params(
 def _run_engine(
     engine,
     params: dict[str, t.Any],
-    fallback_to_browser: bool = False,
-    cdp_endpoint: str = "http://localhost:9222",
-    auto_launch_browser: bool = False,
-    headless: bool = True,
-    browser_args: list[str] | None = None,
-    block_resources: bool = True,
     adapter_backend: str | None = None,
 ) -> list[SearchResult]:
     """Run a single engine search synchronously.
@@ -109,8 +103,9 @@ def _run_engine(
     2. Send HTTP request
     3. Call engine.response(resp) → engine parses and returns results
 
-    If fallback_to_browser=True and HTTP fails with CAPTCHA/AccessDenied,
-    retry via CDP browser connection.
+    Per-engine failures are logged and returned as an empty list so that one
+    broken engine doesn't abort the whole search. Callers that need the
+    structured failure signal should wrap this themselves.
     """
     engine_name = engine.name
 
@@ -190,48 +185,6 @@ def _run_engine(
         return _parse_response(resp, params)
 
     except Exception as e:
-        # Check if we should fallback to browser
-        should_fallback = fallback_to_browser and isinstance(e, (
-            network.SearchEngineCaptchaException,
-            network.SearchEngineAccessDeniedException,
-            network.SearchEngineTooManyRequestsException,
-        ))
-
-        if should_fallback:
-            log.warning(
-                "Engine '%s' HTTP failed (%s), retrying via CDP browser",
-                engine_name, e,
-            )
-            try:
-                from scoutlet import browser
-                html, status = browser.run_via_cdp(
-                    url=params["url"],
-                    method=params.get("method", "GET").upper(),
-                    post_data=params.get("data"),
-                    headers=headers,
-                    cdp_endpoint=cdp_endpoint,
-                    timeout=timeout,
-                    auto_launch_browser=auto_launch_browser,
-                    headless=headless,
-                    browser_args=browser_args,
-                    block_resources=block_resources,
-                )
-
-                # Build a mock response object for the engine's response() parser
-                class MockResponse:
-                    status_code = status
-                    text = html
-                    url = params["url"]
-                    search_params = params
-
-                return _parse_response(MockResponse(), params)
-
-            except Exception as cdp_err:
-                log.warning(
-                    "Engine '%s' CDP fallback also failed: %s",
-                    engine_name, cdp_err,
-                )
-
         log.warning("Engine '%s' failed: %s", engine_name, e)
         return []
 
@@ -247,10 +200,6 @@ async def search(
     timeout: float = 10.0,
     engine_dir: str | None = None,
     proxy: str | None = None,
-    search_fallback_to_browser: bool = False,
-    search_cdp_endpoint: str | None = None,
-    search_auto_launch_browser: bool = False,
-    search_headless: bool | None = None,
     search_adapter_backend: str | None = None,
 ) -> list[SearchResult]:
     """Execute a search across multiple engines concurrently.
@@ -271,10 +220,6 @@ async def search(
         timeout: Per-engine timeout in seconds
         engine_dir: Custom engine directory
         proxy: HTTP/SOCKS5 proxy URL (e.g., "socks5://127.0.0.1:1080")
-        search_fallback_to_browser: Enable CDP fallback for all selected engines
-        search_cdp_endpoint: CDP endpoint override for search fallback
-        search_auto_launch_browser: Auto-launch Chrome when fallback is needed
-        search_headless: Override managed browser headless/headful mode
         search_adapter_backend: Global HTTP adapter backend ("httpx" or
             "fingerprint"). Per-engine ``http_client`` overrides this.
 
@@ -326,12 +271,6 @@ async def search(
     for eng in active_engines:
         # Per-engine proxy override: engine.proxies takes precedence over global proxy
         eng_proxy = getattr(eng, 'proxies', None) or proxy
-        eng_fallback = getattr(eng, 'fallback_to_browser', False) or search_fallback_to_browser
-        eng_cdp_endpoint = search_cdp_endpoint or getattr(eng, 'cdp_endpoint', "http://localhost:9222")
-        eng_auto_launch = getattr(eng, 'auto_launch_browser', False) or search_auto_launch_browser
-        eng_headless = getattr(eng, 'headless', True) if search_headless is None else search_headless
-        eng_browser_args = getattr(eng, 'browser_args', None)
-        eng_block_resources = getattr(eng, 'block_resources', True)
         # Per-engine adapter backend wins over the global flag; "" means unset.
         eng_adapter = getattr(eng, 'http_client', "") or search_adapter_backend
         params = _build_default_params(
@@ -343,21 +282,15 @@ async def search(
             timeout=min(timeout, getattr(eng, 'timeout', 10.0)),
             proxy=eng_proxy,
         )
-        engine_params.append((eng, params, eng_fallback, eng_cdp_endpoint,
-                              eng_auto_launch, eng_headless, eng_browser_args,
-                              eng_block_resources, eng_adapter))
+        engine_params.append((eng, params, eng_adapter))
 
     # Execute engines concurrently via threads
-    async def _run_in_thread(eng, params, fallback, cdp_endpoint,
-                             auto_launch, headless, browser_args, block_res, adapter):
-        return await asyncio.to_thread(
-            _run_engine, eng, params, fallback, cdp_endpoint,
-            auto_launch, headless, browser_args, block_res, adapter,
-        )
+    async def _run_in_thread(eng, params, adapter):
+        return await asyncio.to_thread(_run_engine, eng, params, adapter)
 
     tasks = [
-        _run_in_thread(eng, params, fb, cdp, al, hl, ba, br, ab)
-        for eng, params, fb, cdp, al, hl, ba, br, ab in engine_params
+        _run_in_thread(eng, params, adapter)
+        for eng, params, adapter in engine_params
     ]
     results_list = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -385,10 +318,6 @@ def search_sync(
     timeout: float = 10.0,
     engine_dir: str | None = None,
     proxy: str | None = None,
-    search_fallback_to_browser: bool = False,
-    search_cdp_endpoint: str | None = None,
-    search_auto_launch_browser: bool = False,
-    search_headless: bool | None = None,
     search_adapter_backend: str | None = None,
 ) -> list[SearchResult]:
     """Synchronous wrapper for search()."""
@@ -403,9 +332,5 @@ def search_sync(
         timeout=timeout,
         engine_dir=engine_dir,
         proxy=proxy,
-        search_fallback_to_browser=search_fallback_to_browser,
-        search_cdp_endpoint=search_cdp_endpoint,
-        search_auto_launch_browser=search_auto_launch_browser,
-        search_headless=search_headless,
         search_adapter_backend=search_adapter_backend,
     ))

@@ -11,7 +11,6 @@ Based on [SearXNG](https://github.com/searxng/searxng)'s engine system and resul
 - Compatible with SearXNG engine code patterns — copy and change imports to use
 - Python API and CLI interfaces
 - 108 built-in engines (general, news, images, videos, code, music, files, science, movies, social media, and more)
-- CDP browser fallback (bypass anti-bot), with optional auto-launch headless Chrome
 - Optional TLS fingerprint backend (`primp`) for browser-grade TLS impersonation
 - Engine health monitoring + AI auto-heal pipeline (snapshots → LLM repair → PR)
 
@@ -27,7 +26,7 @@ There are several approaches for AI agents to acquire search capabilities:
 | **Runtime** | Python library, embed directly | Call paid APIs | Requires web service deployment | Framework-level, tied to LLM |
 | **Dependencies** | None | Requires API Key | Flask + Docker | Specific LLM + search API |
 | **Core deps** | 3 (httpx/lxml/babel) | SDK or HTTP | Dozens | Varies |
-| **Anti-bot** | CDP 3-tier fallback | Handled by provider | None | Depends on external API |
+| **Anti-bot** | TLS fingerprint adapter (optional) | Handled by provider | None | Depends on external API |
 | **Engine ecosystem** | Compatible with SearXNG engines | Fixed engines | 200+ engines | Fixed engines |
 | **Result quality** | Multi-engine aggregated scoring | Single engine | Multi-engine aggregated scoring | Varies |
 | **Cost** | Free, runs locally | Paid / rate-limited | Free but requires server | Free + LLM costs |
@@ -40,26 +39,11 @@ There are several approaches for AI agents to acquire search capabilities:
 
 Shares SearXNG's engine ecosystem and aggregation algorithm (weighted scoring, hash dedup, merge/sort), but transforms from a web service into an embeddable Python library. No deployment needed — `pip install` and go.
 
-**2. CDP 3-tier anti-bot fallback**
-
-```
-HTTP request → success → return results
-             → failed (CAPTCHA/403/429)
-             → headless Chrome retry
-                 → success → return results
-                 → blocked by anti-bot
-                 → auto-downgrade to headful Chrome retry
-```
-
-- HTTP blocked → auto-launch headless Chrome for navigation
-- Headless also blocked → auto-downgrade to headful Chrome (real browser window) retry
-- Multi-layer anti-bot detection: engine-specific (Google sorry, Bing block) + generic anti-bot (Cloudflare, Akamai, PerimeterX) + page structure checks
-
-**3. Ultra-lightweight, 3 core dependencies**
+**2. Ultra-lightweight, 3 core dependencies**
 
 Only `httpx`, `lxml`, `babel`. Compared to SearXNG's dozens of server-side dependencies, scoutlet runs truly zero-config in any Python environment.
 
-**4. SearXNG engine compatibility**
+**3. SearXNG engine compatibility**
 
 Directly reuse SearXNG's massive engine ecosystem (200+). Copy engine files from SearXNG and change imports — no other solution offers this level of engine reuse.
 
@@ -242,8 +226,8 @@ These engines have `categories = []`, matching SearXNG. Default searches skip th
 ```bash
 pip install -e .
 
-# For CDP browser auto-launch feature
-pip install -e ".[browser]"
+# For TLS fingerprint backend (optional)
+pip install -e ".[fingerprint]"
 ```
 
 Requires Python >= 3.10.
@@ -293,7 +277,7 @@ scoutlet --list-engines
 scoutlet --list-engines --by-category
 ```
 
-## Proxy and Browser Fallback
+## Proxy
 
 ### HTTP Proxy
 
@@ -313,91 +297,6 @@ scoutlet "test" -e google --proxy http://127.0.0.1:7890
 scoutlet "test" -e google --proxy socks5://127.0.0.1:1080
 ```
 
-### CDP Browser Fallback (Bypass Anti-bot)
-
-When engines are blocked by anti-bot mechanisms (CAPTCHA, AccessDenied, 429) from Google/DuckDuckGo etc., automatically retry via Chrome browser.
-
-**Advantages**:
-- Reuses user's logged-in browser session (no login required)
-- Uses real browser fingerprints, undetectable as bot
-- Works with all engines
-
-**Option 1: Auto-launch browser (recommended)**
-
-No need to manually start Chrome — the program auto-launches headless Chrome. When blocked by anti-bot, automatically downgrades to headful retry.
-
-```python
-load_engines(engine_configs={
-    "google": {
-        "fallback_to_browser": True,
-        "auto_launch_browser": True,   # Auto-launch Chrome (headless by default)
-    },
-})
-
-results = search_sync("test", engines=["google"])
-```
-
-Requires the browser dependency:
-
-```bash
-pip install -e ".[browser]"
-```
-
-The same behavior is available from CLI:
-
-```bash
-scoutlet "test" -e google --fallback-to-browser --auto-launch-browser
-scoutlet "test" -e google --fallback-to-browser --auto-launch-browser --headful
-scoutlet "test" -e google --fallback-to-browser --cdp-endpoint http://localhost:9333
-```
-
-`--auto-launch-browser` implicitly enables browser fallback. `--headful` uses a visible browser window instead of headless mode.
-
-**Option 2: Manually start Chrome**
-
-Start Chrome with remote debugging port beforehand:
-
-```bash
-# macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/chrome-profile
-
-# Linux
-google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile
-```
-
-```python
-load_engines(engine_configs={
-    "google": {"fallback_to_browser": True},
-})
-
-# HTTP succeeds → normal path; fails → auto-fallback to CDP
-results = search_sync("test", engines=["google"])
-```
-
-**Configuration**:
-
-| Config | Default | Description |
-|--------|---------|-------------|
-| `fallback_to_browser` | `False` | Enable CDP browser fallback |
-| `auto_launch_browser` | `False` | Auto-launch Chrome (requires `pychrome`) |
-| `headless` | `True` | Default headless mode; auto-downgrades to headful when blocked |
-| `block_resources` | `True` | Block images/fonts/CSS etc. for faster loading |
-| `browser_args` | `None` | Custom Chrome launch arguments |
-| `cdp_endpoint` | `http://localhost:9222` | CDP debugging endpoint address |
-
-**Workflow**:
-
-```
-HTTP request → success → return results
-             → failed (CAPTCHA/403/429)
-             → CDP fallback
-                 → headless Chrome navigation
-                     → normal page → return results
-                     → blocked → auto-downgrade to headful retry
-```
-
 ### Google Engine Notes
 
 Google search uses a **mobile GSA User-Agent** (Android Chrome) to bypass JS-only pages and return traditional HTML. As Google's anti-bot strategies evolve, you may need to:
@@ -407,7 +306,7 @@ Google search uses a **mobile GSA User-Agent** (Android Chrome) to bypass JS-onl
 python scripts/update_gsa_useragents.py
 ```
 
-If the GSA UA is also blocked, enable `fallback_to_browser=True` to retry via user's Chrome.
+If the GSA UA is also blocked, switch to the TLS fingerprint backend (see below) or pick an alternative engine from the default set.
 
 ## TLS Fingerprint HTTP Backend (Optional)
 
@@ -474,7 +373,7 @@ See [design doc](docs/auto_heal_design.md) for the full architecture.
 473 offline tests across three suites:
 
 ```bash
-uv run pytest tests/unit/        # core logic: result types, aggregation, engine_loader, network, browser, CDP fallback, client_adapter, CLI
+uv run pytest tests/unit/        # core logic: result types, aggregation, engine_loader, network, response_classifier, client_adapter, CLI
 uv run pytest tests/engines/     # P0/P1 engine parser fixtures (saved HTML/JSON, no network)
 uv run pytest tests/             # all offline tests
 ```

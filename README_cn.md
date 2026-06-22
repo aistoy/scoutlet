@@ -10,7 +10,6 @@
 - 兼容 SearXNG engine 代码模式，拷贝后改 import 即可使用
 - 提供 Python API 和 CLI 两种使用方式
 - 内置 108 个引擎（general、news、images、videos、code、music、files、science、movies、social media 等）
-- 支持 CDP 浏览器 fallback（绕过反爬），可选自动启动 headless Chrome
 - 可选 TLS 指纹后端（`primp`），模拟真实浏览器 TLS 指纹
 - 引擎健康监控 + AI 自动修复流水线（快照 → LLM 修复 → 自动 PR）
 
@@ -26,7 +25,7 @@
 | **运行方式** | Python 库，直接嵌入 | 调用付费 API | 需部署 Web 服务 | 框架级，绑定 LLM |
 | **外部依赖** | 无 | 需要 API Key | Flask + Docker | 特定 LLM + 搜索 API |
 | **核心依赖** | 3 个（httpx/lxml/babel） | SDK 或 HTTP | 数十个 | 视框架而定 |
-| **反爬策略** | CDP 三级降级 | 服务商处理 | 无 | 依赖外部 API |
+| **反爬策略** | TLS 指纹适配器（可选） | 服务商处理 | 无 | 依赖外部 API |
 | **引擎生态** | 兼容 SearXNG 引擎 | 固定引擎 | 200+ 引擎 | 固定引擎 |
 | **结果质量** | 多引擎聚合评分 | 单引擎 | 多引擎聚合评分 | 视实现而定 |
 | **成本** | 免费，本地运行 | 付费/有配额 | 免费但需服务器 | 免费 + LLM 费用 |
@@ -39,22 +38,7 @@
 
 与 SearXNG 共享引擎生态和聚合算法（加权评分、hash 去重、合并排序），但从 Web 服务变成了可嵌入的 Python 库。Agent 不需要额外部署任何东西，`pip install` 即用。
 
-**2. CDP 三级降级反爬机制**
-
-```
-HTTP 请求 → 成功 → 返回结果
-          → 失败（CAPTCHA/403/429）
-          → headless Chrome 重试
-              → 成功 → 返回结果
-              → 被反爬拦截
-              → 自动降级 headful Chrome 重试
-```
-
-- HTTP 被拦截 → 自动启动 headless Chrome 导航
-- headless 也被拦截 → 自动降级为 headful Chrome（真实浏览器窗口）重试
-- 多层反爬检测结果：引擎特定（Google sorry、Bing block）+ 通用反爬（Cloudflare、Akamai、PerimeterX）+ 页面结构检查
-
-**3. 极轻量，3 个核心依赖**
+**2. 极轻量，3 个核心依赖**
 
 仅 `httpx`、`lxml`、`babel`。对比 SearXNG 数十个服务端依赖，scoutlet 可以真正零配置运行在任何 Python 环境中。
 
@@ -241,8 +225,8 @@ HTTP 请求 → 成功 → 返回结果
 ```bash
 pip install -e .
 
-# 如需 CDP 浏览器自动启动功能
-pip install -e ".[browser]"
+# 如需 TLS 指纹后端（可选）
+pip install -e ".[fingerprint]"
 ```
 
 需要 Python >= 3.10。
@@ -292,7 +276,7 @@ scoutlet --list-engines
 scoutlet --list-engines --by-category
 ```
 
-## 代理和浏览器 Fallback
+## 代理
 
 ### HTTP 代理
 
@@ -312,91 +296,6 @@ scoutlet "test" -e google --proxy http://127.0.0.1:7890
 scoutlet "test" -e google --proxy socks5://127.0.0.1:1080
 ```
 
-### CDP 浏览器 Fallback（绕过反爬）
-
-当引擎被 Google/DuckDuckGo 等反爬机制拦截（CAPTCHA、AccessDenied、429）时，自动通过 Chrome 浏览器重试。
-
-**优势**：
-- 复用用户已登录的浏览器会话（无需登录）
-- 使用真实浏览器指纹，无法被检测为 bot
-- 适用于所有引擎
-
-**方式一：自动启动浏览器（推荐）**
-
-无需手动启动 Chrome，程序会自动启动 headless 模式 Chrome。被反爬拦截时自动降级为 headful 重试。
-
-```python
-load_engines(engine_configs={
-    "google": {
-        "fallback_to_browser": True,
-        "auto_launch_browser": True,   # 自动启动 Chrome（默认 headless）
-    },
-})
-
-results = search_sync("test", engines=["google"])
-```
-
-需要安装浏览器依赖：
-
-```bash
-pip install -e ".[browser]"
-```
-
-CLI 也支持同样能力：
-
-```bash
-scoutlet "test" -e google --fallback-to-browser --auto-launch-browser
-scoutlet "test" -e google --fallback-to-browser --auto-launch-browser --headful
-scoutlet "test" -e google --fallback-to-browser --cdp-endpoint http://localhost:9333
-```
-
-`--auto-launch-browser` 会隐式启用 browser fallback。`--headful` 会使用可见浏览器窗口，而不是 headless 模式。
-
-**方式二：手动启动 Chrome**
-
-提前启动 Chrome 并开启远程调试端口：
-
-```bash
-# macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/chrome-profile
-
-# Linux
-google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile
-```
-
-```python
-load_engines(engine_configs={
-    "google": {"fallback_to_browser": True},
-})
-
-# HTTP 成功时走正常路径；失败时自动降级到 CDP
-results = search_sync("test", engines=["google"])
-```
-
-**配置项**：
-
-| 配置 | 默认值 | 说明 |
-|------|--------|------|
-| `fallback_to_browser` | `False` | 启用 CDP 浏览器 fallback |
-| `auto_launch_browser` | `False` | 自动启动 Chrome（需安装 `pychrome`） |
-| `headless` | `True` | 默认 headless 模式，被拦截时自动降级 headful |
-| `block_resources` | `True` | 拦截图片/字体/CSS 等资源加速加载 |
-| `browser_args` | `None` | 自定义 Chrome 启动参数 |
-| `cdp_endpoint` | `http://localhost:9222` | CDP 调试端点地址 |
-
-**工作流程**：
-
-```
-HTTP 请求 → 成功 → 返回结果
-          → 失败（CAPTCHA/403/429）
-          → CDP fallback
-              → headless Chrome 导航
-                  → 正常页面 → 返回结果
-                  → 被拦截 → 自动降级 headful 重试
-```
-
 ### Google 引擎的特殊说明
 
 Google 搜索通过 **移动端 GSA User-Agent**（Android Chrome）绕过 JS-only 页面返回传统 HTML。随着 Google 反爬策略变化，可能需要：
@@ -406,7 +305,7 @@ Google 搜索通过 **移动端 GSA User-Agent**（Android Chrome）绕过 JS-on
 python scripts/update_gsa_useragents.py
 ```
 
-如果 GSA UA 也被封堵，启用 `fallback_to_browser=True` 通过用户 Chrome 重试。
+如果 GSA UA 也被封堵，切到下方 TLS 指纹后端，或从默认引擎集里换一个引擎。
 
 ## TLS 指纹 HTTP 后端（可选）
 
@@ -473,7 +372,7 @@ uv run python scripts/auto_heal.py --report health-report.json --snapshots-dir s
 共 473 个离线测试，分三类：
 
 ```bash
-uv run pytest tests/unit/        # 核心逻辑：result types、aggregation、engine_loader、network、browser、CDP fallback、client_adapter、CLI
+uv run pytest tests/unit/        # 核心逻辑：result types、aggregation、engine_loader、network、response_classifier、client_adapter、CLI
 uv run pytest tests/engines/     # P0/P1 引擎 parser fixture 测试（已保存 HTML/JSON，无网络）
 uv run pytest tests/             # 全部离线测试
 ```
