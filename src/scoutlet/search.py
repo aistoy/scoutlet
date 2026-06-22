@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import time
 import typing as t
 
 import httpx
@@ -14,6 +15,7 @@ import httpx
 from scoutlet import engine_loader
 from scoutlet.result_types import SearchResult
 from scoutlet.result_aggregation import ResultContainer
+from scoutlet.outcome import EngineOutcome, FailureKind, classify_failure
 from scoutlet.utils import gen_useragent
 from scoutlet import network
 
@@ -95,7 +97,7 @@ def _run_engine(
     engine,
     params: dict[str, t.Any],
     adapter_backend: str | None = None,
-) -> list[SearchResult]:
+) -> EngineOutcome:
     """Run a single engine search synchronously.
 
     Follows SearXNG's pattern:
@@ -103,11 +105,14 @@ def _run_engine(
     2. Send HTTP request
     3. Call engine.response(resp) → engine parses and returns results
 
-    Per-engine failures are logged and returned as an empty list so that one
-    broken engine doesn't abort the whole search. Callers that need the
-    structured failure signal should wrap this themselves.
+    Per-engine failures are caught, classified into FailureKind, and returned
+    inside EngineOutcome. One broken engine doesn't abort the whole search.
     """
     engine_name = engine.name
+    start = time.monotonic()
+
+    def _elapsed_ms() -> int:
+        return int((time.monotonic() - start) * 1000)
 
     def _parse_response(resp, params):
         # Wrap response to guarantee search_params attribute (primp Response is slotted)
@@ -136,6 +141,7 @@ def _run_engine(
                 log.warning("Engine %s returned unexpected type: %s", engine_name, type(r))
         return normalized
 
+    phase = "request"
     try:
         # Step 1: Engine builds request params
         result = engine.request(params.get("query", ""), params)
@@ -143,7 +149,12 @@ def _run_engine(
             params = result
 
         if not params.get("url"):
-            return []
+            return EngineOutcome(
+                engine=engine_name,
+                status=FailureKind.EMPTY,
+                elapsed_ms=_elapsed_ms(),
+                error="engine.request() did not build a URL",
+            )
 
         # Step 2: Send HTTP request
         method = params.get("method", "GET").upper()
@@ -165,6 +176,7 @@ def _run_engine(
         if adapter_backend:
             net_kwargs["adapter_backend"] = adapter_backend
 
+        phase = "fetch"
         if method == "POST":
             data = params.get("data")
             json_data = params.get("json")
@@ -182,11 +194,33 @@ def _run_engine(
             network.raise_for_httperror(resp)
 
         # Step 3: Engine parses response
-        return _parse_response(resp, params)
+        phase = "response"
+        results = _parse_response(resp, params)
+
+        if not results:
+            return EngineOutcome(
+                engine=engine_name,
+                status=FailureKind.EMPTY,
+                elapsed_ms=_elapsed_ms(),
+            )
+
+        return EngineOutcome(
+            engine=engine_name,
+            status=FailureKind.SUCCESS,
+            elapsed_ms=_elapsed_ms(),
+            results=results,
+        )
 
     except Exception as e:
-        log.warning("Engine '%s' failed: %s", engine_name, e)
-        return []
+        status = classify_failure(e, phase)
+        log.warning("Engine '%s' failed (%s, phase=%s): %s",
+                    engine_name, status.value, phase, e)
+        return EngineOutcome(
+            engine=engine_name,
+            status=status,
+            elapsed_ms=_elapsed_ms(),
+            error=str(e),
+        )
 
 
 async def search(
@@ -292,16 +326,17 @@ async def search(
         _run_in_thread(eng, params, adapter)
         for eng, params, adapter in engine_params
     ]
-    results_list = await asyncio.gather(*tasks, return_exceptions=True)
+    outcomes_list = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # Aggregate results
+    # Aggregate results from successful outcomes
     container = ResultContainer(engines_registry=engine_loader.engines)
-    for (eng, *_), results in zip(engine_params, results_list):
-        if isinstance(results, Exception):
-            log.warning("Engine '%s' raised: %s", eng.name, results)
+    for (eng, *_), outcome in zip(engine_params, outcomes_list):
+        # asyncio.gather(return_exceptions=True) wraps thread-level errors
+        if isinstance(outcome, Exception):
+            log.warning("Engine '%s' thread raised: %s", eng.name, outcome)
             continue
-        if results:
-            container.extend(eng.name, results)
+        if outcome.results:
+            container.extend(outcome.engine, outcome.results)
 
     container.close()
     return container.get_ordered_results()
