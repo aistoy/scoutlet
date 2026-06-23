@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README_cn.md)
 
+**License:** [AGPL-3.0](LICENSE) | [Notice](NOTICE)
+
 A minimalist local search aggregation tool for AI agents — no API keys, no heavy dependencies, compatible with SearXNG's 200+ search engine ecosystem, delivering powerful search capabilities to local agents.
 
 Based on [SearXNG](https://github.com/searxng/searxng)'s engine system and result aggregation algorithm, retaining only the core engine loading, concurrent requests, scoring, deduplication, merging, and sorting logic.
@@ -406,3 +408,7 @@ CI (`.github/workflows/engine-health.yml`) runs `compileall` + offline tests + t
   - [ ] Auto-Tester: full sandbox validation of AI-generated code (currently CI does compileall + fixture replay + live re-probe; isolated sandbox still TODO)
   - [x] Auto-commit: verified fixes committed via PR for review (CI `auto-heal` job)
   - See [design doc](docs/auto_heal_design.md) for details
+
+## License
+
+scoutlet is licensed under the [GNU Affero General Public License v3](LICENSE). Engine code under `src/scoutlet/engines/` is derived from [SearXNG](https://github.com/searxng/searxng) (also AGPL-3.0). See [NOTICE](NOTICE) for third-party attributions.
