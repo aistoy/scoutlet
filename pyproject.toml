@@ -43,6 +43,9 @@ scoutlet = "scoutlet.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/scoutlet"]
 
+[tool.hatch.build.targets.sdist]
+exclude = ["docs", "CLAUDE.md", "uv.lock", ".github"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
