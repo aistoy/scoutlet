@@ -17,6 +17,7 @@ from scoutlet.result_types import SearchResult
 from scoutlet.result_aggregation import ResultContainer
 from scoutlet.outcome import EngineOutcome, FailureKind, classify_failure
 from scoutlet.response import SearchResponse
+from scoutlet.response_classifier import detect_block_page
 from scoutlet.utils import gen_useragent
 from scoutlet import network
 
@@ -193,6 +194,31 @@ def _run_engine(
         # Check for HTTP errors if engine requested it
         if params.get("raise_for_httperror"):
             network.raise_for_httperror(resp)
+
+        # Block-page detection (CAPTCHA / Access Denied / challenge pages).
+        # Runs only on 2xx with non-empty body: non-2xx is left to the
+        # existing classification path, and empty body falls through to the
+        # parser so EMPTY semantics are preserved (see §6.2 B of the plan).
+        # Classifier errors are swallowed so a broken classifier can't break
+        # the search.
+        try:
+            block_body = resp.text
+        except Exception as e:
+            log.debug("Engine %s: body decode failed for block check: %s", engine_name, e)
+            block_body = ""
+
+        if 200 <= resp.status_code < 300 and block_body:
+            try:
+                block_result = detect_block_page(block_body, url=url)
+                if block_result.blocked:
+                    return EngineOutcome(
+                        engine=engine_name,
+                        status=FailureKind.ANTI_BOT,
+                        elapsed_ms=_elapsed_ms(),
+                        error=f"Block page: {block_result.reason}",
+                    )
+            except Exception as e:
+                log.warning("Engine %s: block classifier raised: %s", engine_name, e)
 
         # Step 3: Engine parses response
         phase = "response"

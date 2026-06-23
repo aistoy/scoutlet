@@ -128,3 +128,67 @@ def test_access_denied_503_classified(respx_mock):
 
     assert response.engines[0].status == FailureKind.ANTI_BOT
     assert get_default_registry().is_available("wikipedia") is False
+
+
+# ---------------------------------------------------------------------------
+# Block-page detection: verifies response_classifier integration in
+# _run_engine. CAPTCHA/blocked pages on 2xx are flagged ANTI_BOT before
+# the parser runs (parser would otherwise return []). Covers three paths:
+#   1. Real block page → ANTI_BOT
+#   2. Empty 2xx body → falls through to parser → EMPTY (preserves §6.2 B)
+#   3. Classifier raises → swallowed, search continues
+# ---------------------------------------------------------------------------
+
+
+def test_block_page_classified_as_anti_bot(respx_mock, bing_captcha_html):
+    respx_mock.route(url__startswith="https://www.bing.com/search").mock(
+        return_value=httpx.Response(200, text=bing_captcha_html)
+    )
+
+    response = search_sync("python tutorial", engines=["bing"])
+
+    assert response.engines[0].status == FailureKind.ANTI_BOT
+    assert response.results == []
+    assert "Block page" in (response.engines[0].error or "")
+
+
+def test_empty_body_not_flagged_as_anti_bot(respx_mock):
+    # An empty 2xx body should NOT be flagged ANTI_BOT. What happens after
+    # (parser returns EMPTY or raises PARSER_ERROR) is engine-specific;
+    # the invariant this test guards is "empty ≠ anti_bot", which keeps
+    # §6.2 B (normal empty results must not trigger cooldown).
+    respx_mock.route(url__startswith="https://www.bing.com/search").mock(
+        return_value=httpx.Response(200, text="")
+    )
+
+    response = search_sync("python tutorial", engines=["bing"])
+
+    assert response.engines[0].status != FailureKind.ANTI_BOT
+    assert response.results == []
+
+
+def test_block_classifier_failure_does_not_break_search(
+    respx_mock, bing_success_html, monkeypatch,
+):
+    # A buggy classifier should not abort the pipeline. The engine should
+    # still parse results normally. `import scoutlet.search` grabs the
+    # module from sys.modules; can't use `from scoutlet import search`
+    # because __init__ re-exports `search` as a function, shadowing the
+    # module name.
+    import scoutlet.search as search_module
+    import sys
+    search_module = sys.modules["scoutlet.search"]
+
+    def _broken_classifier(html, url=""):
+        raise RuntimeError("classifier bug")
+
+    monkeypatch.setattr(search_module, "detect_block_page", _broken_classifier)
+
+    respx_mock.route(url__startswith="https://www.bing.com/search").mock(
+        return_value=httpx.Response(200, text=bing_success_html)
+    )
+
+    response = search_sync("python tutorial", engines=["bing"])
+
+    assert response.engines[0].status == FailureKind.SUCCESS
+    assert len(response.results) >= 1
