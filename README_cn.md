@@ -2,7 +2,6 @@
 
 [English](README.md) | [简体中文](README_cn.md)
 
-**协议:** [AGPL-3.0](LICENSE) | [NOTICE](NOTICE)
 
 面向AI agent的极简本地搜索聚合工具，无API Key，无复杂依赖，兼容SearXNG 的200+搜索引擎生态，为本地Agent提供极强搜索能力。
 
@@ -286,6 +285,25 @@ scoutlet --list-engines
 # 按分类列出引擎
 scoutlet --list-engines --by-category
 ```
+
+## 作为 agent skill 使用
+
+scoutlet 内置面向 agent 的 [SKILL.md](skills/scoutlet-search/SKILL.md)
+
+### 通过 skills CLI 安装(推荐)
+
+```bash
+# 自动检测本地已安装的 agent,装到用户级目录(~/.claude/skills/ 等)
+npx skills add aistoy/scoutlet -g
+
+```
+
+### 手动安装
+```bash
+git clone https://github.com/aistoy/scoutlet.git
+ln -s "$(pwd)/scoutlet/skills/scoutlet-search" ~/.claude/skills/scoutlet-search
+```
+
 
 ## 代理
 

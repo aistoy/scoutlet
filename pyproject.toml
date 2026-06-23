@@ -44,7 +44,7 @@ scoutlet = "scoutlet.cli:main"
 packages = ["src/scoutlet"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["docs", "CLAUDE.md", "uv.lock", ".github"]
+exclude = ["docs", "CLAUDE.md", "uv.lock", ".github", "release.sh", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -2,7 +2,6 @@
 
 [English](README.md) | [简体中文](README_cn.md)
 
-**License:** [AGPL-3.0](LICENSE) | [Notice](NOTICE)
 
 A minimalist local search aggregation tool for AI agents — no API keys, no heavy dependencies, compatible with SearXNG's 200+ search engine ecosystem, delivering powerful search capabilities to local agents.
 
@@ -287,6 +286,26 @@ scoutlet --list-engines
 # Group engines by category
 scoutlet --list-engines --by-category
 ```
+
+## Use as an agent skill
+
+scoutlet ships an agent-ready [SKILL.md](skills/scoutlet-search/SKILL.md) 
+
+### Install via skills CLI (recommended)
+
+```bash
+# Auto-detects installed agents, installs globally (~/.claude/skills/, etc.)
+npx skills add aistoy/scoutlet -g
+
+```
+
+### Manual install 
+
+```bash
+git clone https://github.com/aistoy/scoutlet.git
+ln -s "$(pwd)/scoutlet/skills/scoutlet-search" ~/.claude/skills/scoutlet-search
+```
+
 
 ## Proxy
 
