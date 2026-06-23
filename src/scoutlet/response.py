@@ -86,6 +86,23 @@ def compute_status(
     return SearchStatus.FAILED
 
 
+def collect_snippet_warnings(results: list[SearchResult]) -> list[str]:
+    """Scan results for missing snippets; return agent-facing warnings.
+
+    A None snippet (§6.2 D) means the engine didn't supply usable text
+    for that candidate. Agents that gate fetch decisions on snippet need
+    to know how many candidates are flying blind so they can choose to
+    fetch anyway or reformulate. We summarize as a count rather than
+    per-result messages to keep the warnings list readable.
+    """
+    if not results:
+        return []
+    missing = sum(1 for r in results if r.snippet is None)
+    if missing == 0:
+        return []
+    return [f"{missing}/{len(results)} results have no snippet (agent must fetch to assess)"]
+
+
 @dataclass
 class SearchResponse:
     """What ``search()`` and ``search_sync()`` return.

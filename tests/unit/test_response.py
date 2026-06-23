@@ -69,6 +69,41 @@ class TestComputeStatus:
         assert compute_status(outcomes, []) == SearchStatus.PARTIAL
 
 
+class TestCollectSnippetWarnings:
+    def test_no_results_no_warning(self):
+        from scoutlet.response import collect_snippet_warnings
+        assert collect_snippet_warnings([]) == []
+
+    def test_all_snippets_present_no_warning(self):
+        from scoutlet.response import collect_snippet_warnings
+        results = [
+            SearchResult(url="https://a.com", content="snippet A"),
+            SearchResult(url="https://b.com", content="snippet B"),
+        ]
+        assert collect_snippet_warnings(results) == []
+
+    def test_some_missing_snippet_emits_warning(self):
+        from scoutlet.response import collect_snippet_warnings
+        results = [
+            SearchResult(url="https://a.com", content="snippet A"),
+            SearchResult(url="https://b.com", content=""),
+            SearchResult(url="https://c.com", content="   "),
+        ]
+        warnings = collect_snippet_warnings(results)
+        assert len(warnings) == 1
+        assert "2/3" in warnings[0]
+
+    def test_all_missing_snippet_emits_warning(self):
+        from scoutlet.response import collect_snippet_warnings
+        results = [
+            SearchResult(url="https://a.com", content=""),
+            SearchResult(url="https://b.com", content=None),
+        ]
+        warnings = collect_snippet_warnings(results)
+        assert len(warnings) == 1
+        assert "2/2" in warnings[0]
+
+
 class TestEngineRunInfo:
     def test_as_dict_serializes_status_enum(self):
         info = EngineRunInfo(
