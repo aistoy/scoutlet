@@ -2,9 +2,71 @@
 
 import pytest
 
-from scoutlet.outcome import FailureKind
-from scoutlet.response import EngineRunInfo, SearchResponse, SkippedEngine
+from scoutlet.outcome import EngineOutcome, FailureKind
+from scoutlet.response import (
+    EngineRunInfo,
+    SearchResponse,
+    SearchStatus,
+    SkippedEngine,
+    compute_status,
+)
 from scoutlet.result_types import SearchResult
+
+
+def _outcome(engine: str, status: FailureKind) -> EngineOutcome:
+    return EngineOutcome(engine=engine, status=status, elapsed_ms=10)
+
+
+class TestComputeStatus:
+    def test_no_outcomes_no_skipped_is_success(self):
+        # Vacuous call: nothing ran, nothing skipped. Not a failure.
+        assert compute_status([], []) == SearchStatus.SUCCESS
+
+    def test_all_success_is_success(self):
+        outcomes = [
+            _outcome("a", FailureKind.SUCCESS),
+            _outcome("b", FailureKind.SUCCESS),
+        ]
+        assert compute_status(outcomes, []) == SearchStatus.SUCCESS
+
+    def test_empty_counts_as_success(self):
+        # §6.2 B: EMPTY is a valid outcome, not a failure.
+        outcomes = [
+            _outcome("a", FailureKind.SUCCESS),
+            _outcome("b", FailureKind.EMPTY),
+        ]
+        assert compute_status(outcomes, []) == SearchStatus.SUCCESS
+
+    def test_mixed_success_and_failure_is_partial(self):
+        outcomes = [
+            _outcome("a", FailureKind.SUCCESS),
+            _outcome("b", FailureKind.TIMEOUT),
+        ]
+        assert compute_status(outcomes, []) == SearchStatus.PARTIAL
+
+    def test_success_with_skipped_is_partial(self):
+        outcomes = [_outcome("a", FailureKind.SUCCESS)]
+        skipped = [SkippedEngine(name="b", reason="cooldown")]
+        assert compute_status(outcomes, skipped) == SearchStatus.PARTIAL
+
+    def test_all_failed_is_failed(self):
+        outcomes = [
+            _outcome("a", FailureKind.TIMEOUT),
+            _outcome("b", FailureKind.ANTI_BOT),
+        ]
+        assert compute_status(outcomes, []) == SearchStatus.FAILED
+
+    def test_all_skipped_is_failed(self):
+        skipped = [SkippedEngine(name="a", reason="cooldown")]
+        assert compute_status([], skipped) == SearchStatus.FAILED
+
+    def test_empty_with_failure_is_partial(self):
+        outcomes = [
+            _outcome("a", FailureKind.EMPTY),
+            _outcome("b", FailureKind.TIMEOUT),
+        ]
+        # EMPTY counts as success-equivalent, so this is mixed → PARTIAL.
+        assert compute_status(outcomes, []) == SearchStatus.PARTIAL
 
 
 class TestEngineRunInfo:
@@ -95,6 +157,19 @@ class TestSearchResponse:
         a.results.append(SearchResult(url="https://x.com", title="X"))
         a.engines.append(EngineRunInfo(name="x", status=FailureKind.SUCCESS, elapsed_ms=0))
         a.skipped.append(SkippedEngine(name="y", reason="z"))
+        a.warnings.append("be careful")
         assert b.results == []
         assert b.engines == []
         assert b.skipped == []
+        assert b.warnings == []
+
+    def test_as_dict_includes_query_status_warnings(self):
+        r = SearchResponse(
+            query="python tutorial",
+            status=SearchStatus.PARTIAL,
+            warnings=["engine bing timed out"],
+        )
+        d = r.as_dict()
+        assert d["query"] == "python tutorial"
+        assert d["status"] == "partial"
+        assert d["warnings"] == ["engine bing timed out"]

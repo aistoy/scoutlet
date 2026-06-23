@@ -187,3 +187,57 @@ def test_block_classifier_failure_does_not_break_search(
 
     assert response.engines[0].status == FailureKind.SUCCESS
     assert len(response.results) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Top-level response shape: query is echoed, status reflects the mix of
+# engine outcomes. Covers §6.2 D wiring.
+# ---------------------------------------------------------------------------
+
+
+def test_response_query_is_echoed(respx_mock, bing_success_html):
+    respx_mock.route(url__startswith="https://www.bing.com/search").mock(
+        return_value=httpx.Response(200, text=bing_success_html)
+    )
+
+    response = search_sync("python tutorial", engines=["bing"])
+    assert response.query == "python tutorial"
+    assert response.as_dict()["query"] == "python tutorial"
+
+
+def test_response_status_success_when_all_engines_succeed(respx_mock, bing_success_html):
+    from scoutlet.response import SearchStatus
+
+    respx_mock.route(url__startswith="https://www.bing.com/search").mock(
+        return_value=httpx.Response(200, text=bing_success_html)
+    )
+
+    response = search_sync("python tutorial", engines=["bing"])
+    assert response.status == SearchStatus.SUCCESS
+
+
+def test_response_status_partial_when_one_engine_fails(respx_mock, bing_success_html):
+    from scoutlet.response import SearchStatus
+
+    # Bing succeeds, wikipedia (raise_for_httperror=True) returns 503.
+    respx_mock.route(url__startswith="https://www.bing.com/search").mock(
+        return_value=httpx.Response(200, text=bing_success_html)
+    )
+    respx_mock.route(url__startswith="https://en.wikipedia.org/w/api.php").mock(
+        return_value=httpx.Response(503)
+    )
+
+    response = search_sync("python", engines=["bing", "wikipedia"])
+    assert response.status == SearchStatus.PARTIAL
+
+
+def test_response_status_failed_when_all_engines_fail(respx_mock):
+    from scoutlet.response import SearchStatus
+
+    respx_mock.route(url__startswith="https://en.wikipedia.org/w/api.php").mock(
+        return_value=httpx.Response(503)
+    )
+
+    response = search_sync("python", engines=["wikipedia"])
+    assert response.status == SearchStatus.FAILED
+    assert response.results == []

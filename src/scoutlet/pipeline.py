@@ -323,7 +323,7 @@ async def search(
     # cooldowns, so first search is unaffected.)
     from scoutlet.health import get_default_registry
     from scoutlet.routing import plan_waves, coverage_satisfied
-    from scoutlet.response import EngineRunInfo, SearchResponse, SkippedEngine
+    from scoutlet.response import EngineRunInfo, SearchResponse, SkippedEngine, compute_status
     health = get_default_registry()
     active_engines: list[t.Any] = []
     skipped: list[SkippedEngine] = []
@@ -340,7 +340,10 @@ async def search(
 
     if not active_engines:
         log.warning("No engines available for search")
-        return SearchResponse(results=[], engines=[], skipped=skipped)
+        return SearchResponse(
+            results=[], engines=[], skipped=skipped,
+            query=query, status=compute_status([], skipped),
+        )
 
     # Two-wave routing. Explicit `engines=[...]` bypasses waves — the
     # caller asked for these specific engines, we run them all. Default
@@ -421,6 +424,8 @@ async def search(
             results=final_results,
             engines=engine_runs,
             skipped=skipped,
+            query=query,
+            status=compute_status(all_outcomes, skipped),
         )
 
     # --- Wave 1 ---
