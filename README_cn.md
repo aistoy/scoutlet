@@ -16,6 +16,26 @@
 - 可选 TLS 指纹后端（`primp`），模拟真实浏览器 TLS 指纹
 - 引擎健康监控 + AI 自动修复流水线（快照 → LLM 修复 → 自动 PR）
 
+## 安装
+
+```bash
+# 从 PyPI 安装(推荐)
+pip install scoutlet
+
+# 可选:TLS 指纹后端(浏览器级模拟)
+pip install scoutlet[fingerprint]
+```
+
+**从源码安装**(开发用):
+
+```bash
+git clone https://github.com/aistoy/scoutlet.git
+cd scoutlet
+pip install -e ".[dev]"
+```
+
+需要 Python >= 3.10。
+
 ## 为什么选择 scoutlet
 
 ### 方案对比
@@ -223,17 +243,6 @@
 | emojipedia | Emojipedia Emoji 参考 |
 | wikipedia | Wikipedia 摘要 |
 
-## 安装
-
-```bash
-pip install -e .
-
-# 如需 TLS 指纹后端（可选）
-pip install -e ".[fingerprint]"
-```
-
-需要 Python >= 3.10。
-
 ## 使用
 
 ### Python API
@@ -303,6 +312,11 @@ npx skills add aistoy/scoutlet -g
 git clone https://github.com/aistoy/scoutlet.git
 ln -s "$(pwd)/scoutlet/skills/scoutlet-search" ~/.claude/skills/scoutlet-search
 ```
+
+
+## Web UI
+
+scoutlet 自带简易 web UI(`src/scoutlet/templates/index.html`),由 `src/scoutlet/webui.py` 提供。本地用 `scoutlet --ui` 启动。
 
 
 ## 代理

@@ -1,0 +1,92 @@
+# Mirror this repo to a Hugging Face Space on every push to main.
+#
+# Setup (one-time):
+#   1. Create an empty Space at https://huggingface.co/new-space
+#      (SDK = Docker, visibility = Public or Private). Note the Space id,
+#      which is "<your-username>/<space-name>".
+#   2. Create a HF token at https://huggingface.co/settings/tokens
+#      (scope: Write).
+#   3. In this GitHub repo: Settings → Secrets and variables → Actions
+#      - Add "Repository secret": HF_TOKEN = the token from step 2
+#      - Add "Repository variable": HF_SPACE = "<your-username>/<space-name>"
+#
+# After both are set, every push to main auto-syncs to the Space. The
+# workflow injects the HF YAML frontmatter into README.md on the fly,
+# so the GitHub README stays clean (no frontmatter pollution).
+
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate required secrets/vars
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is not set. See sync-hf-space.yml header for setup."
+            exit 1
+          fi
+          if [ -z "$HF_SPACE" ]; then
+            echo "::error::HF_SPACE variable is not set (expected format: username/space-name)."
+            exit 1
+          fi
+          echo "Will sync to: $HF_SPACE"
+
+      - name: Inject HF Space frontmatter into README
+        # Prepend YAML frontmatter so HF recognizes the Space config
+        # (sdk=docker, port=7860, etc.). The injection is local — the
+        # GitHub repo itself is never modified.
+        run: |
+          {
+            echo '---'
+            echo 'title: Scoutlet'
+            echo 'emoji: 🔍'
+            echo 'colorFrom: yellow'
+            echo 'colorTo: gray'
+            echo 'sdk: docker'
+            echo 'app_port: 7860'
+            echo 'pinned: false'
+            echo '---'
+            echo ''
+            cat README.md
+          } > README.md.new
+          mv README.md.new README.md
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Inject HF Space frontmatter (auto)"
+
+          # Force-push so HF stays an exact mirror of GitHub main. The
+          # Space is treated as read-only from HF's side.
+          git remote add hf "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}"
+          git push hf HEAD:main --force
+
+      - name: Print Space URL
+        env:
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          USER=${HF_SPACE%/*}
+          NAME=${HF_SPACE#*/}
+          echo "::notice::Space synced: https://${USER}-${NAME}.hf.space"

@@ -17,6 +17,26 @@ Based on [SearXNG](https://github.com/searxng/searxng)'s engine system and resul
 - Optional TLS fingerprint backend (`primp`) for browser-grade TLS impersonation
 - Engine health monitoring + AI auto-heal pipeline (snapshots → LLM repair → PR)
 
+## Installation
+
+```bash
+# From PyPI (recommended)
+pip install scoutlet
+
+# Optional: TLS fingerprint backend (browser-grade impersonation)
+pip install scoutlet[fingerprint]
+```
+
+**From source** (for development):
+
+```bash
+git clone https://github.com/aistoy/scoutlet.git
+cd scoutlet
+pip install -e ".[dev]"
+```
+
+Requires Python >= 3.10.
+
 ## Why scoutlet
 
 ### Comparison
@@ -224,17 +244,6 @@ These engines have `categories = []`, matching SearXNG. Default searches skip th
 | emojipedia | Emojipedia Emoji Reference |
 | wikipedia | Wikipedia Summary |
 
-## Installation
-
-```bash
-pip install -e .
-
-# For TLS fingerprint backend (optional)
-pip install -e ".[fingerprint]"
-```
-
-Requires Python >= 3.10.
-
 ## Usage
 
 ### Python API
@@ -305,6 +314,11 @@ npx skills add aistoy/scoutlet -g
 git clone https://github.com/aistoy/scoutlet.git
 ln -s "$(pwd)/scoutlet/skills/scoutlet-search" ~/.claude/skills/scoutlet-search
 ```
+
+
+## web UI
+
+scoutlet ships a simple built-in web UI (`src/scoutlet/templates/index.html`) served by `src/scoutlet/webui.py`. Run it locally with `scoutlet --ui`.
 
 
 ## Proxy

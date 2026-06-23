@@ -1,0 +1,39 @@
+# Version control / metadata
+.git
+.gitignore
+.gitattributes
+.github
+
+# Python build / runtime artifacts
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# Distribution build outputs
+dist
+build
+
+# Local-only files (not for the image)
+CLAUDE.md
+release.sh
+uv.lock
+
+# Docs and tests not needed in the runtime image
+docs
+skills
+tests
+
+# Editor / OS cruft
+.DS_Store
+.idea
+.vscode
+*.swp

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import http.server
 import json
+import os
 import socketserver
 import threading
 import webbrowser
@@ -25,8 +26,12 @@ log = logging.getLogger("scoutlet.webui")
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "index.html"
 
-DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 5123
+# All three are env-overridable so the same code runs locally (laptop, opens
+# browser) and on a server (HF Spaces, Render, etc.) without code changes.
+DEFAULT_HOST = os.environ.get("SCOUTLET_UI_HOST", "127.0.0.1")
+DEFAULT_PORT = int(os.environ.get("SCOUTLET_UI_PORT", "5123"))
+DEFAULT_OPEN_BROWSER = os.environ.get("SCOUTLET_UI_OPEN_BROWSER", "1") == "1"
+DEFAULT_AUTO_PORT = os.environ.get("SCOUTLET_UI_AUTO_PORT", "1") == "1"
 
 
 def _load_template() -> str:
@@ -187,16 +192,20 @@ def _pick_free_port(host: str, start: int, attempts: int = 20) -> int:
 def run_server(
     host: str = DEFAULT_HOST,
     port: int = DEFAULT_PORT,
-    open_browser: bool = True,
-    auto_port: bool = True,
+    open_browser: bool = DEFAULT_OPEN_BROWSER,
+    auto_port: bool = DEFAULT_AUTO_PORT,
 ) -> None:
     """Serve the scoutlet UI until interrupted.
 
     Args:
         host: Bind address (default 127.0.0.1 — local only).
+              Override via SCOUTLET_UI_HOST; set to 0.0.0.0 for container use.
         port: Preferred port; bumped automatically if occupied when auto_port.
+              Override via SCOUTLET_UI_PORT (HF Spaces convention: 7860).
         open_browser: Open the default browser to the page on start.
+                      Override via SCOUTLET_UI_OPEN_BROWSER=0 for servers.
         auto_port: If the preferred port is taken, try the next ones up.
+                   Override via SCOUTLET_UI_AUTO_PORT=0 to bind exactly.
     """
     actual_port = _pick_free_port(host, port) if auto_port else port
     server = ThreadingHTTPServer((host, actual_port), ScoutletHandler)
