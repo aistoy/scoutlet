@@ -1,5 +1,7 @@
 # scoutlet
 
+[English](README.md) | [简体中文](README_cn.md)
+
 A minimalist local search aggregation tool for AI agents — no API keys, no heavy dependencies, compatible with SearXNG's 200+ search engine ecosystem, delivering powerful search capabilities to local agents.
 
 Based on [SearXNG](https://github.com/searxng/searxng)'s engine system and result aggregation algorithm, retaining only the core engine loading, concurrent requests, scoring, deduplication, merging, and sorting logic.
@@ -377,7 +379,7 @@ See [design doc](docs/auto_heal_design.md) for the full architecture.
 
 ## Tests
 
-473 offline tests across three suites:
+593 offline tests across three suites:
 
 ```bash
 uv run pytest tests/unit/        # core logic: result types, aggregation, engine_loader, network, response_classifier, client_adapter, CLI

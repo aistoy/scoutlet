@@ -1,5 +1,7 @@
 # scoutlet
 
+[English](README.md) | [简体中文](README_cn.md)
+
 面向AI agent的极简本地搜索聚合工具，无API Key，无复杂依赖，兼容SearXNG 的200+搜索引擎生态，为本地Agent提供极强搜索能力。
 
 基于 [SearXNG](https://github.com/searxng/searxng) 的引擎体系和结果聚合算法实现，仅保留核心引擎加载、并发请求、评分去重合并排序逻辑。
@@ -376,7 +378,7 @@ uv run python scripts/auto_heal.py --report health-report.json --snapshots-dir s
 
 ## 测试
 
-共 473 个离线测试，分三类：
+共 593 个离线测试，分三类：
 
 ```bash
 uv run pytest tests/unit/        # 核心逻辑：result types、aggregation、engine_loader、network、response_classifier、client_adapter、CLI
