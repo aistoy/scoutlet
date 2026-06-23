@@ -16,11 +16,15 @@ the registry takes a lock around mutations.
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from dataclasses import dataclass, field
 
 from scoutlet.outcome import EngineOutcome, FailureKind
+
+
+log = logging.getLogger("scoutlet.health")
 
 
 # Cooldown rules (seconds).
@@ -30,6 +34,15 @@ RATE_LIMIT_COOLDOWN_SEC = 300     # 429
 FAILURE_STREAK_THRESHOLD = 3      # consecutive failures triggering streak cooldown
 FAILURE_STREAK_COOLDOWN_SEC = 600
 SUCCESS_RATE_BAD = 0.3            # below this → result scoring penalizes the engine
+
+# EMPTY outcomes are treated as a separate signal: they do NOT count toward
+# the failure streak and do NOT trigger cooldown (see §6.2 B of the
+# near-term plan — a chronically-empty engine might just have a query with
+# no matches, not a broken state). We do emit a warn log when an engine
+# returns empty N times in a row, so parser drift / API changes get noticed.
+# Profile override (`max_empty_streak`) lands with M2; for now this is a
+# module-level default.
+EMPTY_STREAK_WARN_THRESHOLD = 10
 
 
 @dataclass
@@ -45,6 +58,7 @@ class EngineHealth:
     last_success_at: float | None = None
     cooldown_until: float = 0.0    # epoch seconds; 0 means no cooldown
     consecutive_failures: int = 0
+    consecutive_empties: int = 0
 
     @property
     def total(self) -> int:
@@ -107,16 +121,30 @@ class EngineHealthRegistry:
                 h.success_count += 1
                 h.last_success_at = now
                 h.consecutive_failures = 0
+                h.consecutive_empties = 0
                 h.cooldown_until = 0.0
                 return
 
-            # Failure accounting
-            h.failure_count += 1
-            h.consecutive_failures += 1
-
+            # EMPTY is a separate signal: increment its own counters but do
+            # NOT touch failure_count / consecutive_failures / cooldown.
+            # A warn fires the first time the streak crosses the threshold.
             if outcome.status == FailureKind.EMPTY:
                 h.empty_count += 1
-            elif outcome.status == FailureKind.ANTI_BOT:
+                h.consecutive_empties += 1
+                if h.consecutive_empties == EMPTY_STREAK_WARN_THRESHOLD:
+                    log.warning(
+                        "Engine '%s' returned empty results %d times in a row; "
+                        "possible parser drift or upstream API change",
+                        outcome.engine, h.consecutive_empties,
+                    )
+                return
+
+            # Real failure accounting (non-EMPTY)
+            h.failure_count += 1
+            h.consecutive_failures += 1
+            h.consecutive_empties = 0
+
+            if outcome.status == FailureKind.ANTI_BOT:
                 h.anti_bot_count += 1
                 h.cooldown_until = max(h.cooldown_until, now + ANTIBOT_COOLDOWN_SEC)
             elif outcome.status == FailureKind.RATE_LIMIT:
@@ -147,6 +175,7 @@ class EngineHealthRegistry:
                     "in_cooldown": h.in_cooldown,
                     "cooldown_until": h.cooldown_until or None,
                     "is_bad": h.is_bad,
+                    "consecutive_empties": h.consecutive_empties,
                 }
             return out
 

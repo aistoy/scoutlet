@@ -1,5 +1,6 @@
 """Unit tests for the in-process engine health registry."""
 
+import logging
 import time
 from unittest.mock import patch
 
@@ -9,6 +10,7 @@ from scoutlet.health import (
     ANTIBOT_COOLDOWN_SEC,
     EngineHealth,
     EngineHealthRegistry,
+    EMPTY_STREAK_WARN_THRESHOLD,
     FAILURE_STREAK_COOLDOWN_SEC,
     FAILURE_STREAK_THRESHOLD,
     RATE_LIMIT_COOLDOWN_SEC,
@@ -128,16 +130,49 @@ class TestEngineHealthRegistry:
         assert h.success_count == 1
 
     def test_empty_does_not_trigger_cooldown(self):
+        """§6.2 B: EMPTY must not trigger cooldown, regardless of count."""
         reg = EngineHealthRegistry()
-        reg.update(_outcome("mwmbl", FailureKind.EMPTY))
-        h = reg.get("mwmbl")
-        assert h.empty_count == 1
-        assert h.consecutive_failures == 1
-        assert reg.is_available("mwmbl") is True
-        # But empty still counts as a failure for streak purposes
-        for _ in range(FAILURE_STREAK_THRESHOLD - 1):
+        # Well past FAILURE_STREAK_THRESHOLD and EMPTY_STREAK_WARN_THRESHOLD
+        for _ in range(EMPTY_STREAK_WARN_THRESHOLD + 5):
             reg.update(_outcome("mwmbl", FailureKind.EMPTY))
-        assert not reg.is_available("mwmbl")
+        h = reg.get("mwmbl")
+        assert h.empty_count == EMPTY_STREAK_WARN_THRESHOLD + 5
+        assert h.consecutive_empties == EMPTY_STREAK_WARN_THRESHOLD + 5
+        assert h.consecutive_failures == 0  # EMPTY doesn't touch failure streak
+        assert h.failure_count == 0
+        assert h.cooldown_until == 0.0
+        assert reg.is_available("mwmbl") is True
+
+    def test_empty_streak_emits_warn_at_threshold(self, caplog):
+        """§6.2 B: warn fires once when the streak crosses the threshold."""
+        reg = EngineHealthRegistry()
+        with caplog.at_level(logging.WARNING, logger="scoutlet.health"):
+            for _ in range(EMPTY_STREAK_WARN_THRESHOLD - 1):
+                reg.update(_outcome("mwmbl", FailureKind.EMPTY))
+            assert len(caplog.records) == 0
+            reg.update(_outcome("mwmbl", FailureKind.EMPTY))
+            assert len(caplog.records) == 1
+            # Further empties do not re-fire (== threshold, not >=)
+            reg.update(_outcome("mwmbl", FailureKind.EMPTY))
+            assert len(caplog.records) == 1
+
+    def test_empty_streak_resets_on_success(self):
+        reg = EngineHealthRegistry()
+        for _ in range(5):
+            reg.update(_outcome("mwmbl", FailureKind.EMPTY))
+        assert reg.get("mwmbl").consecutive_empties == 5
+        reg.update(_outcome("mwmbl", FailureKind.SUCCESS))
+        assert reg.get("mwmbl").consecutive_empties == 0
+
+    def test_empty_does_not_pre_increment_failure_streak(self):
+        """EMPTY followed by a real failure: streak starts at 1, not 2."""
+        reg = EngineHealthRegistry()
+        reg.update(_outcome("bing", FailureKind.EMPTY))
+        reg.update(_outcome("bing", FailureKind.PARSER_ERROR))
+        h = reg.get("bing")
+        assert h.consecutive_failures == 1
+        assert h.consecutive_empties == 0
+        assert h.failure_count == 1
 
     def test_latency_ema_blends_samples(self):
         reg = EngineHealthRegistry()
