@@ -11,7 +11,7 @@ import os
 
 import pytest
 
-from scoutlet.search import search_sync
+from scoutlet.pipeline import search_sync
 
 # P0 engines to smoke test
 P0_ENGINES = ["bing", "google", "duckduckgo", "qwant", "baidu"]

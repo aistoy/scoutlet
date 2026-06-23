@@ -77,7 +77,7 @@ def _parse_search_params(qs: dict[str, list[str]]) -> dict:
 
 
 def _do_search(params: dict) -> dict:
-    from scoutlet.search import search_sync
+    from scoutlet.pipeline import search_sync
 
     if not params["query"]:
         return {"error": "empty query", "results": [], "count": 0}

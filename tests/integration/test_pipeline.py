@@ -15,7 +15,7 @@ import pytest
 from scoutlet import engine_loader
 from scoutlet.health import get_default_registry
 from scoutlet.outcome import FailureKind
-from scoutlet.search import search_sync
+from scoutlet.pipeline import search_sync
 
 
 # ---------------------------------------------------------------------------
@@ -171,18 +171,13 @@ def test_block_classifier_failure_does_not_break_search(
     respx_mock, bing_success_html, monkeypatch,
 ):
     # A buggy classifier should not abort the pipeline. The engine should
-    # still parse results normally. `import scoutlet.search` grabs the
-    # module from sys.modules; can't use `from scoutlet import search`
-    # because __init__ re-exports `search` as a function, shadowing the
-    # module name.
-    import scoutlet.search as search_module
-    import sys
-    search_module = sys.modules["scoutlet.search"]
+    # still parse results normally.
+    import scoutlet.pipeline as pipeline_module
 
     def _broken_classifier(html, url=""):
         raise RuntimeError("classifier bug")
 
-    monkeypatch.setattr(search_module, "detect_block_page", _broken_classifier)
+    monkeypatch.setattr(pipeline_module, "detect_block_page", _broken_classifier)
 
     respx_mock.route(url__startswith="https://www.bing.com/search").mock(
         return_value=httpx.Response(200, text=bing_success_html)

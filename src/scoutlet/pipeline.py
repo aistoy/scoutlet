@@ -23,7 +23,7 @@ from scoutlet import network
 
 import logging
 
-log = logging.getLogger("scoutlet.search")
+log = logging.getLogger("scoutlet.pipeline")
 
 
 # Default engine sets used when neither `engines=` nor `categories=` is given.

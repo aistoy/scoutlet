@@ -2,7 +2,7 @@
 
 import pytest
 
-from scoutlet.search import (
+from scoutlet.pipeline import (
     _is_chinese_query,
     _resolve_default_engines,
     DEFAULT_ENGINES_BASE,

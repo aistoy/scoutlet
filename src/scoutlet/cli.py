@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 
-from scoutlet.search import search_sync
+from scoutlet.pipeline import search_sync
 from scoutlet.engine_loader import (
     list_available_engines,
     load_engines,

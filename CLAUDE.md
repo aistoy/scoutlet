@@ -53,7 +53,7 @@ search() / search_sync()
 
 ### Core Modules (src/scoutlet/)
 
-- **`search.py`** — Orchestrator. `search()` is async, `search_sync()` wraps it via `asyncio.run()`. Engines run concurrently via `asyncio.to_thread`.
+- **`pipeline.py`** — Orchestrator. `search()` is async, `search_sync()` wraps it via `asyncio.run()`. Engines run concurrently via `asyncio.to_thread`. Module is named `pipeline` (not `search`) to avoid shadowing the `search()` function when it's re-exported from `scoutlet/__init__.py`.
 - **`result_types.py`** — `SearchResult` dataclass with SearXNG-compatible hash-based dedup. `EngineResults` is a typed list.
 - **`result_aggregation.py`** — `ResultContainer` implements SearXNG scoring: `weight × Σ(1/position)`, plus merge (longer content wins, HTTPS preferred) and category-grouped sorting.
 - **`engine_loader.py`** — Three-tier loading: external dir (`~/.scoutlet/engines/`) overrides bundled (`src/scoutlet/engines/`). Engines are Python modules with `request()`/`response()` functions.

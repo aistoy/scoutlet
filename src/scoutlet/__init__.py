@@ -20,7 +20,7 @@ Usage:
 
 from scoutlet.result_types import SearchResult
 from scoutlet.response import SearchResponse
-from scoutlet.search import search, search_sync
+from scoutlet.pipeline import search, search_sync
 from scoutlet.engine_loader import (
     load_engine,
     load_engines,
