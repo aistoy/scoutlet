@@ -16,7 +16,7 @@
 FROM python:3.11-slim
 
 # HF Spaces runs containers as a non-root user (UID 1000) — set that up
-# first so pip installs land in the right place.
+# first so the runtime user exists before we install anything.
 RUN useradd -m -u 1000 user
 
 WORKDIR /app
@@ -24,10 +24,9 @@ WORKDIR /app
 # Copy repo (`.dockerignore` filters out .git, .venv, dist, tests, etc.)
 # and install from source so webui.py always matches the repo HEAD.
 COPY --chown=user:user . /app
-RUN pip install --no-cache-dir --user .
+RUN pip install --no-cache-dir .
 
 ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     SCOUTLET_UI_HOST=0.0.0.0 \
     SCOUTLET_UI_PORT=7860 \
