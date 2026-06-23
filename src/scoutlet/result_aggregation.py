@@ -121,6 +121,8 @@ class ResultContainer:
         except ValueError:
             # Result without parsed_url, just append
             result.positions = [position]
+            if result.engine:
+                result.engine_positions = {result.engine: position}
             result_hash = id(result)
             self._results_map[result_hash] = result
             return
@@ -129,11 +131,15 @@ class ResultContainer:
             existing = self._results_map.get(result_hash)
             if not existing:
                 result.positions = [position]
+                if result.engine:
+                    result.engine_positions = {result.engine: position}
                 self._results_map[result_hash] = result
                 return
 
             merge_two_results(existing, result)
             existing.positions.append(position)
+            if result.engine:
+                existing.engine_positions[result.engine] = position
 
     def close(self) -> None:
         """Close container and calculate scores.

@@ -156,6 +156,30 @@ class TestResultContainer:
         assert "google" in ordered[0].engines
         assert "bing" in ordered[0].engines
 
+    def test_engine_positions_populated_on_first_insert(self):
+        container = ResultContainer()
+        r1 = SearchResult(url="https://example.com/p1", engine="google")
+        r2 = SearchResult(url="https://example.com/p2", engine="google")
+        container.extend("google", [r1, r2])
+        container.close()
+        ordered = sorted(container.get_ordered_results(), key=lambda r: r.url)
+        # Position is 1-indexed within the engine's batch.
+        assert ordered[0].engine_positions == {"google": 1}
+        assert ordered[1].engine_positions == {"google": 2}
+
+    def test_engine_positions_merges_across_engines(self):
+        container = ResultContainer()
+        r1 = SearchResult(url="https://example.com/page", engine="google")
+        r2 = SearchResult(url="https://example.com/page", engine="bing")
+        container.extend("google", [r1])  # position 1
+        container.extend("bing", [r2])    # position 1 in bing's batch
+        container.close()
+        ordered = container.get_ordered_results()
+        assert len(ordered) == 1
+        # Both engines contributed, each with their own position.
+        assert ordered[0].engine_positions == {"google": 1, "bing": 1}
+        assert ordered[0].corroboration_count == 2
+
     def test_longer_content_wins_on_merge(self):
         container = ResultContainer()
         r1 = SearchResult(url="https://x.com", title="Test", content="Short", engine="google")

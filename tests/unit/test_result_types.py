@@ -152,6 +152,65 @@ class TestSearchResultAsDict:
         assert d["engine"] == "google"
         assert d["score"] == 1.5
 
+    def test_includes_rerank_metadata(self):
+        r = SearchResult(
+            url="https://docs.python.org/3/library/asyncio.html",
+            title="asyncio",
+            content="Docs",
+            engine="google",
+            score=2.5,
+        )
+        r.normalize()
+        d = r.as_dict()
+        # All rerank-metadata fields are present (§6.2 D).
+        assert d["normalized_url"] == "https://docs.python.org/3/library/asyncio.html"
+        assert d["snippet"] == "Docs"
+        assert d["source_engines"] == ["google"]
+        assert d["engine_positions"] == {}
+        assert d["corroboration_count"] == 1
+        assert d["discovery_score"] == 2.5
+        assert d["is_https"] is True
+        assert d["netloc"] == "docs.python.org"
+        assert d["path_depth"] == 3
+        assert d["is_pdf"] is False
+
+    def test_snippet_none_when_content_empty(self):
+        r = SearchResult(url="https://x.com", content="")
+        assert r.snippet is None
+        r2 = SearchResult(url="https://x.com", content="   \n\t  ")
+        assert r2.snippet is None
+
+    def test_is_pdf_detection(self):
+        r = SearchResult(url="https://x.com/paper.pdf")
+        r.normalize()
+        assert r.is_pdf is True
+        r2 = SearchResult(url="https://x.com/page.PDF")
+        r2.normalize()
+        assert r2.is_pdf is True
+        r3 = SearchResult(url="https://x.com/page.html")
+        r3.normalize()
+        assert r3.is_pdf is False
+
+    def test_path_depth(self):
+        for url, expected in [
+            ("https://x.com/", 0),
+            ("https://x.com/a", 1),
+            ("https://x.com/a/b", 2),
+            ("https://x.com/a/b/", 2),
+            ("https://x.com/a/b/c", 3),
+        ]:
+            r = SearchResult(url=url)
+            r.normalize()
+            assert r.path_depth == expected, f"{url} → expected {expected}"
+
+    def test_is_https(self):
+        r = SearchResult(url="https://x.com")
+        r.normalize()
+        assert r.is_https is True
+        r2 = SearchResult(url="http://x.com")
+        r2.normalize()
+        assert r2.is_https is False
+
 
 class TestSearchResultDictAccess:
     def test_getitem(self):
